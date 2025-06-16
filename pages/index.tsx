@@ -1,31 +1,14 @@
-import { css } from "@emotion/react";
-import {
-  Animated,
-  Basic,
-  bounce,
-  Combined,
-  Pink,
-  BasicExtended,
-  ComponentSelectorsExtended,
-} from "../shared/styles";
+import { AppLayout } from '../components/layout/AppLayout'
+import { ChatList } from '../components/chat/ChatList'
+import { ChatPanel } from '../components/chat/ChatPanel'
+import { MoleculeViewer } from '../components/molecule/MoleculeViewer'
 
-const Home = () => (
-  <div
-    css={css`
-      display: flex;
-      flex-direction: column;
-    `}
-  >
-    <Basic>Cool Styles</Basic>
-    <Pink>Pink text</Pink>
-    <Combined>
-      With <code>:hover</code>.
-    </Combined>
-    <Animated animation={bounce}>Let's bounce.</Animated>
-    <ComponentSelectorsExtended>
-      <BasicExtended>Nested</BasicExtended>
-    </ComponentSelectorsExtended>
-  </div>
-);
-
-export default Home;
+export default function Home() {
+  return (
+    <AppLayout
+      chatList={<ChatList />}
+      chat={<ChatPanel />}
+      molecule={<MoleculeViewer />}
+    />
+  )
+}
