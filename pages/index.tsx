@@ -6,7 +6,7 @@ import { MoleculeViewer } from '../components/molecule/MoleculeViewer'
 export default function Home() {
   return (
     <AppLayout
-      chatList={<ChatList />}
+      chatList={(props) => <ChatList {...props} />}
       chat={<ChatPanel />}
       molecule={<MoleculeViewer />}
     />
