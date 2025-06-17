@@ -8,11 +8,15 @@ This is a Next.js molecular visualization application using the Molstar library.
 
 ## Development Commands
 
+**Important**: 
+- The development server is always running on http://localhost:3000. You should assume it's running and never attempt to start it.
+- Always use yarn, never npm.
+
 ```bash
 # Install dependencies
 yarn install
 
-# Start development server (runs on http://localhost:3000)
+# Start development server (runs on http://localhost:3000) - ALREADY RUNNING
 yarn dev
 
 # Build for production
@@ -49,6 +53,8 @@ Uses Jotai's `atomFamily` to create per-molecule state atoms that track:
 - Loading status
 - Structure data
 - Viewer initialization state
+
+**Important**: Always use the "toggles" package for managing boolean state instead of useState, unless you need to reduce prop drilling.
 
 ## Important Implementation Details
 

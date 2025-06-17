@@ -8,20 +8,26 @@
   "dependencies": {
     "@anthropic-ai/claude-code": "^1.0.24",
     "@emotion/cache": "11.11.0",
-    "@emotion/react": "11.10.4",
-    "@emotion/styled": "11.10.4",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@types/lodash": "^4.17.17",
     "cuid": "^3.0.0",
+    "framer-motion": "^12.18.1",
     "global": "^4.4.0",
     "jotai": "^2.12.5",
+    "lodash": "^4.17.21",
     "molstar": "^4.18.0",
     "next": "latest",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "react-icons": "^5.5.0",
+    "toggles": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "18.0.6",
     "@types/react": "18.2.8",
     "@types/react-dom": "18.0.6",
+    "sass": "^1.89.2",
     "typescript": "^4.7.4"
   }
 }

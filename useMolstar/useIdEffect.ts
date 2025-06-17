@@ -49,7 +49,9 @@ const useIdEffect = (baseId, callback, deps = [], debug = false) => {
       callback(!unmounts[id])
     }
     return () => {
-      unmounts?.[id]?.(hook.lastToUnmount)
+      if (typeof unmounts?.[id] === 'function') {
+        unmounts?.[id]?.(hook.lastToUnmount)
+      }
       if (hook.lastToUnmount) delete unmounts[id]
     }
   }, [...deps, id])

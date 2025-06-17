@@ -1,5 +1,8 @@
+/** @jsxImportSource @emotion/react */
 import styled from '@emotion/styled'
 import { useState } from 'react'
+import { BiSidebar } from 'react-icons/bi'
+import { HiOutlinePencilSquare } from 'react-icons/hi2'
 
 const Container = styled.div`
   display: flex;
@@ -8,25 +11,35 @@ const Container = styled.div`
   padding: 0.5rem;
 `
 
-const NewChatButton = styled.button`
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e5e7;
+`
+
+const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #e5e5e7;
-  border-radius: 0.375rem;
-  background-color: #ffffff;
-  color: #202123;
-  font-size: 0.875rem;
-  font-weight: 500;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #666;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: color 0.2s;
 
   &:hover {
-    background-color: #f7f7f8;
+    color: #202123;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `
 
@@ -70,18 +83,23 @@ const mockChats: Chat[] = [
   { id: '4', title: 'Structure comparison', timestamp: new Date() },
 ]
 
-export function ChatList() {
+interface ChatListProps {
+  onToggleSidebar?: () => void
+}
+
+export function ChatList({ onToggleSidebar }: ChatListProps) {
   const [selectedChatId, setSelectedChatId] = useState<string>('1')
 
   return (
     <Container>
-      <NewChatButton>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        New chat
-      </NewChatButton>
+      <Header>
+        <IconButton onClick={onToggleSidebar} title="Toggle sidebar">
+          <BiSidebar />
+        </IconButton>
+        <IconButton title="New chat">
+          <HiOutlinePencilSquare />
+        </IconButton>
+      </Header>
       <ChatItemsContainer>
         {mockChats.map(chat => (
           <ChatItem
