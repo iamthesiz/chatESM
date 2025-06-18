@@ -3,6 +3,19 @@ import { useSetAtom } from 'jotai'
 import { isDraggingAtom } from '../../state'
 import { useCallback } from 'react'
 
+export const ResizeHandle = () => {
+  const setIsDragging = useSetAtom(isDraggingAtom)
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+  }, [setIsDragging])
+
+  return <Handle onMouseDown={handleMouseDown} />
+}
+
 const Handle = styled.div`
   width: 4px;
   height: 100%;
@@ -19,16 +32,3 @@ const Handle = styled.div`
     background-color: #b8b8bb;
   }
 `
-
-export const ResizeHandle = () => {
-  const setIsDragging = useSetAtom(isDraggingAtom)
-
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-  }, [setIsDragging])
-
-  return <Handle onMouseDown={handleMouseDown} />
-}

@@ -4,7 +4,9 @@ import { MoleculeViewer } from '../components/molecule/MoleculeViewer'
 import { ResizeHandle } from '../components/layout/ResizeHandle'
 import styled from '@emotion/styled'
 import { useToggles } from 'toggles'
-import { BiSidebar } from 'react-icons/bi'
+import * as BiIcons from 'react-icons/bi'
+
+const BiSidebar = BiIcons.BiSidebar as any
 import { useResize } from '../hooks/useResize'
 
 export default function Home() {

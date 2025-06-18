@@ -12,67 +12,6 @@ export const TooltipContext = React.createContext<TooltipContextType>({
   setActiveTooltip: () => { }
 })
 
-const IconButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid #e2e8f0;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  
-  svg {
-    width: 16px;
-    height: 16px;
-    color: #718096;
-  }
-  
-  &:hover {
-    background: #f7fafc;
-    border-color: #cbd5e0;
-    
-    svg {
-      color: #4a5568;
-    }
-  }
-`
-
-const Tooltip = styled.div<{ visible: boolean; x: number; y: number }>`
-  position: fixed;
-  top: ${props => props.y}px;
-  left: ${props => props.x}px;
-  transform: translateX(-50%);
-  padding: 6px 10px;
-  background: #2d3748;
-  color: white;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: ${props => props.visible ? 1 : 0};
-  transition: opacity 0.15s;
-  z-index: 999999;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 4px 4px 4px;
-    border-color: transparent transparent #2d3748 transparent;
-  }
-`
-
 interface IconButtonWithTooltipProps {
   id: string
   title: string
@@ -80,12 +19,7 @@ interface IconButtonWithTooltipProps {
   children: React.ReactNode
 }
 
-export function IconButtonWithTooltip({
-  id,
-  title,
-  onClick,
-  children
-}: IconButtonWithTooltipProps) {
+export function IconButtonWithTooltip({ id, title, onClick, children }: IconButtonWithTooltipProps) {
   const { activeTooltip, setActiveTooltip } = React.useContext(TooltipContext)
   const [isHovered, setIsHovered] = useState(false)
   const [tooltipText, setTooltipText] = useState(title)
@@ -160,9 +94,70 @@ export function IconButtonWithTooltip({
           y={tooltipPosition.y}
         >
           {tooltipText}
-        </Tooltip>,
+        </Tooltip> as any,
         document.body
       )}
     </>
   )
 }
+
+const IconButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  
+  svg {
+    width: 16px;
+    height: 16px;
+    color: #718096;
+  }
+  
+  &:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+    
+    svg {
+      color: #4a5568;
+    }
+  }
+`
+
+const Tooltip = styled.div<{ visible: boolean; x: number; y: number }>`
+  position: fixed;
+  top: ${props => props.y}px;
+  left: ${props => props.x}px;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: #2d3748;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: ${props => props.visible ? 1 : 0};
+  transition: opacity 0.15s;
+  z-index: 999999;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 4px 4px 4px;
+    border-color: transparent transparent #2d3748 transparent;
+  }
+`

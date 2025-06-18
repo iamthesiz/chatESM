@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useRef, useLayoutEffect, useMemo } from 'react'
 import { slug } from 'cuid'
 
@@ -22,9 +23,11 @@ const useHook = (ogId, unique) => {
     // used to identify the 1st hook
     first: typeof hookCount[id] === 'undefined',
     lastToUnmount: false,
-    current: {},
+    current: {} as any,
     // ID shared amongst all the hooks associated
-    sharedId: id
+    sharedId: id,
+    count: 0,
+    id: ''
   })
 
   if (typeof hookCount[id] === 'undefined') {

@@ -4,9 +4,21 @@ import styled from '@emotion/styled'
 import { capitalize } from 'lodash'
 import { useToggles } from 'toggles'
 import { MoleculeInstance } from '../../hooks/types'
-import { FaTrash, FaCube, FaPalette, FaLayerGroup, FaEllipsisV, FaTimes, FaDna } from 'react-icons/fa'
-import { MdLayers, MdVisibility, MdVisibilityOff } from 'react-icons/md'
-import { BiShapePolygon } from 'react-icons/bi'
+import * as FaIcons from 'react-icons/fa'
+import * as MdIcons from 'react-icons/md'
+import * as BiIcons from 'react-icons/bi'
+
+const FaTrash = FaIcons.FaTrash as any
+const FaCube = FaIcons.FaCube as any
+const FaPalette = FaIcons.FaPalette as any
+const FaLayerGroup = FaIcons.FaLayerGroup as any
+const FaEllipsisV = FaIcons.FaEllipsisV as any
+const FaTimes = FaIcons.FaTimes as any
+const FaDna = FaIcons.FaDna as any
+const MdLayers = MdIcons.MdLayers as any
+const MdVisibility = MdIcons.MdVisibility as any
+const MdVisibilityOff = MdIcons.MdVisibilityOff as any
+const BiShapePolygon = BiIcons.BiShapePolygon as any
 import { getSelectionCategories, MolstarRepresentationTypes } from '../../utils/molstar-selections'
 import { IconButtonWithTooltip, TooltipContext } from './IconButtonWithTooltip'
 interface NativeControlPanelProps {
@@ -31,13 +43,10 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
   const [structureType, setStructureType] = useState('model')
   const [{ dynamicBonds, addComponentModal, checkExisting }, { toggle }] = useToggles(false)
 
-  // Add component form state
   const [componentSelection, setComponentSelection] = useState('current-selection')
   const [componentRepresentation, setComponentRepresentation] = useState('create-later')
   const [componentLabel, setComponentLabel] = useState('')
-  // const [checkExisting, toggleCheckExisting] = useToggles(false)
 
-  // Sequence viewer state
   const [selectedResidues, setSelectedResidues] = useState<number[]>([])
   const [highlightedResidues, setHighlightedResidues] = useState<number[]>([])
 
@@ -59,7 +68,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
   return (
     <TooltipContext.Provider value={{ activeTooltip, setActiveTooltip }}>
       <Container>
-        {/* Sequence Viewer */}
         <Section>
           <SectionTitle onClick={() => toggleSection('sequenceViewer')}>
             <FaDna />
@@ -69,7 +77,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
           {expandedSections.sequenceViewer && (
             <>
               <SequenceViewerContainer>
-                {/* Mock sequence data - in real implementation, this would come from the loaded structure */}
                 {mockSequence.map((residue, i) => {
                   const residueNum = i + 1
                   const isSelected = selectedResidues.includes(residueNum)
@@ -88,10 +95,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                           newSelected = [...selectedResidues, residueNum]
                         }
                         setSelectedResidues(newSelected)
-
-                        // For now, just log the selection - avoid complex selection parsing
-                        console.log('Selected residues:', newSelected)
-                        // TODO: Implement proper residue selection when structure is loaded
                       }}
                       onMouseEnter={() => {
                         setHighlightedResidues([residueNum])
@@ -105,7 +108,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                     </ResidueSpan>
                   )
                 }).reduce((acc, curr, i) => {
-                  // Add spacing every 10 residues
                   if (i > 0 && i % 10 === 0) {
                     return [...acc, ' ', curr]
                   }
@@ -132,7 +134,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
           )}
         </Section>
 
-        {/* Quick Styles */}
         <Section>
           <SectionTitle onClick={() => toggleSection('quickStyles')}>
             <FaPalette />
@@ -248,7 +249,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
           )}
         </Section>
 
-        {/* Components */}
         <Section>
           <SectionTitle onClick={() => toggleSection('components')}>
             <MdLayers />
@@ -352,7 +352,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
           </ToggleSwitch>
         </SliderLabel>
 
-        {/* Structure */}
         <Section>
           <SectionTitle onClick={() => toggleSection('structure')}>
             <FaCube />
@@ -371,7 +370,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                     id="preset-default"
                     title="Default (Assembly)"
                     onClick={() => {
-                      // Copy to clipboard
                       navigator.clipboard.writeText('Default (Assembly)')
                       console.log('Default')
                     }}
@@ -382,7 +380,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                     id="preset-unit-cell"
                     title="Unit Cell"
                     onClick={() => {
-                      // Copy to clipboard
                       navigator.clipboard.writeText('Unit Cell')
                       console.log('Unit Cell')
                     }}
@@ -393,7 +390,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                     id="preset-super-cell"
                     title="Super Cell"
                     onClick={() => {
-                      // Copy to clipboard
                       navigator.clipboard.writeText('Super Cell')
                       console.log('Super Cell')
                     }}
@@ -404,7 +400,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                     id="preset-crystal-contacts"
                     title="Crystal Contacts"
                     onClick={() => {
-                      // Copy to clipboard
                       navigator.clipboard.writeText('Crystal Contacts')
                       console.log('Crystal Contacts')
                     }}
@@ -418,7 +413,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
             </>
           )}
         </Section>
-        {/* Add Component Modal */}
         {addComponentModal.isOpen && createPortal(
           <Modal isOpen={addComponentModal.isOpen} onClick={() => toggle(addComponentModal)}>
             <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -495,7 +489,6 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                       checkExisting
                     })
 
-                    // Create the component using the molecule instance
                     await molecule.createComponent(
                       componentSelection,
                       componentRepresentation,
@@ -503,17 +496,9 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                       checkExisting.isOn
                     )
 
-                    // Wait a bit for Molstar to update
-                    await new Promise(resolve => setTimeout(resolve, 500))
-
-                    // Log the components after creation
-                    console.log('Components after creation:', molecule.components)
-
-                    // Force a re-render by updating a state variable
                     setComponentUpdateKey(prev => prev + 1)
                     toggle(addComponentModal)
 
-                    // Reset form
                     setComponentSelection('current-selection')
                     setComponentRepresentation('create-later')
                     setComponentLabel('')
@@ -524,9 +509,9 @@ export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
                 </FormSection>
               </ModalBody>
             </ModalContent>
-          </Modal>,
+          </Modal> as any,
           document.body
-        )}
+        ) as any}
       </Container>
     </TooltipContext.Provider>
   )

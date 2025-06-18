@@ -304,10 +304,10 @@ export const DEFAULT_FOG_INTENSITY = 15
 // Background color mapping - includes both hex and decimal representations
 export const BACKGROUND_COLOR_MAP: Record<string | number, string> = {
   16777215: 'white',     // 0xffffff in decimal
-  0xffffff: 'white',     // hex representation
-  0: 'black', 
+  '0xffffff': 'white',     // hex representation
+  0: 'black',
   11: 'black',           // Molstar uses 11 for black
-  0x00000000: 'transparent'
+  '0x00000000': 'transparent'
 }
 
 // Reverse mapping for named colors
@@ -407,7 +407,7 @@ export const MolstarSelectionOptions = {
   // Type selections
   type: {
     polymer: 'Polymer',
-    protein: 'Protein', 
+    protein: 'Protein',
     nucleic: 'Nucleic',
     water: 'Water',
     ion: 'Ion',
@@ -417,7 +417,7 @@ export const MolstarSelectionOptions = {
     'non-standard': 'Non-standard Residue',
     coarse: 'Coarse Elements'
   },
-  
+
   // Structure property selections
   structureProperty: {
     trace: 'Trace',
@@ -433,7 +433,7 @@ export const MolstarSelectionOptions = {
     rna: 'RNA',
     carbohydrate: 'Carbohydrate'
   },
-  
+
   // Atom property selections (elements)
   atomProperty: {
     C: 'Carbon (C)',
@@ -445,7 +445,7 @@ export const MolstarSelectionOptions = {
     metal: 'Metal',
     halogen: 'Halogen'
   },
-  
+
   // Bond property selections
   bondProperty: {
     disulfide: 'Disulfide Bridges',
@@ -453,14 +453,14 @@ export const MolstarSelectionOptions = {
     metallic: 'Metallic Bonds',
     nos: 'NOS Bridges'
   },
-  
+
   // Residue property selections
   residueProperty: {
     'non-standard': 'Non-standard Residues',
     aromatic: 'Aromatic Rings',
     charged: 'Charged',
     polar: 'Polar',
-    nonpolar: 'Non-polar', 
+    nonpolar: 'Non-polar',
     acidic: 'Acidic',
     basic: 'Basic',
     small: 'Small',
@@ -469,7 +469,7 @@ export const MolstarSelectionOptions = {
     purine: 'Purine',
     modified: 'Modified'
   },
-  
+
   // Amino acids (3-letter codes)
   aminoAcid: {
     ALA: 'Alanine (ALA)',
@@ -496,7 +496,7 @@ export const MolstarSelectionOptions = {
     UNK: 'Unknown (UNK)',
     VAL: 'Valine (VAL)'
   },
-  
+
   // Nucleic bases
   nucleicBase: {
     A: 'Adenosine (A)',
@@ -514,7 +514,7 @@ export const MolstarSelectionOptions = {
     N: 'Unknown (N)',
     DN: 'Deoxy Unknown (DN)'
   },
-  
+
   // Internal selections
   internal: {
     'has-representation': 'Has Representation',
@@ -525,7 +525,7 @@ export const MolstarSelectionOptions = {
     'connected-to-ligand': 'Connected to Ligand',
     'connected-to-ligand-or-carb': 'Connected to Ligand or Carbohydrate'
   },
-  
+
   // Manipulate selection operations
   manipulateSelection: {
     'surrounding-residues-5': 'Surrounding Residues (5 Å)',

@@ -4,732 +4,25 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useMolstar } from '../../hooks/useMolstar'
 import type { FC } from 'react'
 import { NativeControlPanel } from './NativeControlPanel'
-import { FiTool, FiRefreshCw, FiX, FiMenu } from 'react-icons/fi'
+import * as FiIcons from 'react-icons/fi'
+
+const FiTool = FiIcons.FiTool as any
+const FiRefreshCw = FiIcons.FiRefreshCw as any
+const FiX = FiIcons.FiX as any
+const FiMenu = FiIcons.FiMenu as any
 import Rotate from '../Rotate'
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-`
-
-const Header = styled.header`
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e5e5e7;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`
-
-const Title = styled.h2`
-  font-size: 1rem;
-  font-weight: 600;
-  color: #202123;
-  margin: 0;
-`
-
-const Controls = styled.div`
-  display: flex;
-  gap: 0.5rem;
-`
-
-const ControlButton = styled.button`
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #e5e5e7;
-  border-radius: 0.375rem;
-  background-color: #ffffff;
-  color: #202123;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: #f7f7f8;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`
-
-const ViewerContainer = styled.div<{ bgColor?: string }>`
-  flex: 1;
-  position: relative;
-  background-color: ${props => {
-    if (props.bgColor === 'transparent') return 'transparent';
-    if (props.bgColor === 'black') return '#000000';
-    if (props.bgColor === 'white') return '#ffffff';
-    return props.bgColor || '#ffffff';
-  }};
-  display: flex;
-  width: 100%;
-  overflow: hidden;
-`
-
-const ViewerContent = styled.div`
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  min-width: 0;
-`
-
-const NativePanelSidebar = styled.div<{ isOpen: boolean }>`
-  position: absolute;
-  top: 0;
-  right: ${props => props.isOpen ? '0' : '-400px'};
-  width: 400px;
-  height: 100%;
-  background: white;
-  border-left: 1px solid #e5e5e7;
-  transition: right 0.3s ease;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  box-shadow: ${props => props.isOpen ? '-2px 0 8px rgba(0, 0, 0, 0.1)' : 'none'};
-  pointer-events: ${props => props.isOpen ? 'auto' : 'none'};
-`
-
-const NativePanelHeader = styled.div`
-  padding: 1rem;
-  border-bottom: 1px solid #e5e5e7;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  
-  h3 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #202123;
-  }
-`
-
-const NativePanelContent = styled.div`
-  flex: 1;
-  overflow-y: auto;
-`
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-  color: #718096;
-  transition: color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  &:hover {
-    color: #202123;
-  }
-  
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`
-
-const NativeToolsButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 4rem;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.95);
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  &:hover {
-    background-color: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  svg {
-    width: 20px;
-    height: 20px;
-    color: #4a5568;
-  }
-`
-
-const HamburgerButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 10;
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  border: none;
-  border-radius: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  color: #202123;
-  
-  &:hover {
-    background-color: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-  
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`
-
-const ControlsPanel = styled.div`
-  width: 280px;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  border-left: 1px solid #e5e5e7;
-  background-color: #ffffff;
-  padding: 1rem;
-  box-sizing: border-box;
-  flex-shrink: 0;
-  
-  /* Custom scrollbar styling */
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #f7f7f8;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #d5d5d7;
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #b5b5b7;
-  }
-`
-
-const LoadingOverlay = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(255, 255, 255, 0.9);
-  z-index: 10;
-`
-
-const shimmer = keyframes`
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-`
-
-const LoadingText = styled.div`
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: inline-block;
-  color: #8e8ea0;
-  background: linear-gradient(
-    90deg,
-    #8e8ea0 0%,
-    #8e8ea0 20%,
-    #c5c5d2 50%,
-    #8e8ea0 80%,
-    #8e8ea0 100%
-  );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: ${shimmer} 2s linear infinite;
-`
-
-const MolstarContainer = styled.div`
-  width: 100%;
-  height: 100%;
-  position: relative;
-  
-  .msp-plugin {
-    width: 100% !important;
-    height: 100% !important;
-  }
-`
-
-const ControlGroup = styled.div`
-  margin-bottom: 1.5rem;
-`
-
-const Label = styled.label`
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #8e8ea0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-`
-
-const ButtonGroup = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-`
-
-const SmallButton = styled.button<{ isActive?: boolean }>`
-  padding: 0.25rem 0.5rem;
-  border: 1px solid ${props => props.isActive ? '#202123' : '#e5e5e7'};
-  border-radius: 0.25rem;
-  background-color: ${props => props.isActive ? '#202123' : '#ffffff'};
-  color: ${props => props.isActive ? '#ffffff' : '#202123'};
-  font-size: 0.625rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: ${props => props.isActive ? '#202123' : '#f7f7f8'};
-  }
-`
-
-const ColorPickerWrapper = styled.div`
-  position: relative;
-  display: inline-block;
-`
-
-const ColorPickerInput = styled.input`
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 1px solid #e5e5e7;
-  border-radius: 0.25rem;
-  cursor: pointer;
-  background: transparent;
-  
-  &::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-  
-  &::-webkit-color-swatch {
-    border: none;
-    border-radius: 0.25rem;
-  }
-`
-
-const Slider = styled.input`
-  width: 100%;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: #e5e5e7;
-  outline: none;
-  border-radius: 2px;
-  
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 12px;
-    height: 12px;
-    background: #202123;
-    cursor: pointer;
-    border-radius: 50%;
-  }
-  
-  &::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
-    background: #202123;
-    cursor: pointer;
-    border-radius: 50%;
-    border: none;
-  }
-`
-
-const SliderLabel = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.25rem;
-  font-size: 0.625rem;
-  color: #202123;
-`
-
-const SliderRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-`
-
-const ResetButton = styled.button`
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #8e8ea0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-
-  &:hover {
-    color: #202123;
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
-`
-
-const ColorPicker = styled.input`
-  width: 32px;
-  height: 24px;
-  border: 1px solid #e5e5e7;
-  border-radius: 4px;
-  cursor: pointer;
-  padding: 0;
-  
-  &::-webkit-color-swatch-wrapper {
-    padding: 2px;
-  }
-  
-  &::-webkit-color-swatch {
-    border: none;
-    border-radius: 2px;
-  }
-`
-
-const LevelItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  padding: 8px;
-  background: #f7f7f8;
-  border-radius: 4px;
-`
-
-const LevelInput = styled.input`
-  width: 60px;
-  padding: 4px 8px;
-  border: 1px solid #e5e5e7;
-  border-radius: 4px;
-  font-size: 12px;
-`
-
-const RemoveButton = styled.button`
-  background: transparent;
-  border: none;
-  color: #dc3545;
-  cursor: pointer;
-  padding: 4px;
-  
-  &:hover {
-    color: #c82333;
-  }
-`
-
-const AddButton = styled.button`
-  width: 100%;
-  padding: 6px 12px;
-  border: 1px solid #e5e5e7;
-  border-radius: 4px;
-  background: #fff;
-  color: #666;
-  cursor: pointer;
-  font-size: 12px;
-  margin-top: 8px;
-  
-  &:hover {
-    background: #f7f7f8;
-  }
-`
-
-const ScreenshotDropdown = styled.div`
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  background: white;
-  border: 1px solid #e5e5e7;
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  min-width: 280px;
-`
-
-const ScreenshotPreview = styled.div`
-  width: 100%;
-  height: 150px;
-  border: 1px solid #e5e5e7;
-  border-radius: 4px;
-  margin-bottom: 12px;
-  overflow: hidden;
-  background: #f7f7f8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-`
-
-const ScreenshotOptions = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`
-
-const ScreenshotRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-`
-
-const ScreenshotButton = styled.button`
-  flex: 1;
-  padding: 8px 16px;
-  border: 1px solid #e5e5e7;
-  border-radius: 4px;
-  background: white;
-  color: #333;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-  
-  &:hover {
-    background: #f7f7f8;
-  }
-  
-  &:active {
-    background: #e5e5e7;
-  }
-`
-
-const FormatSelect = styled.select`
-  padding: 6px 12px;
-  border: 1px solid #e5e5e7;
-  border-radius: 4px;
-  background: white;
-  font-size: 14px;
-  cursor: pointer;
-`
-
-const SelectDropdown = styled.select`
-  width: 100%;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #e5e5e7;
-  border-radius: 0.25rem;
-  background-color: #ffffff;
-  color: #202123;
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    background-color: #f7f7f8;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #202123;
-  }
-`
-
-const SequenceViewer = styled.div`
-  font-family: monospace;
-  font-size: 0.75rem;
-  line-height: 1.6;
-  background-color: #f7f7f8;
-  padding: 0.75rem;
-  border-radius: 0.375rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-  max-height: 200px;
-  overflow-y: auto;
-  
-  /* Custom scrollbar */
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #e5e5e7;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background: #d5d5d7;
-    border-radius: 3px;
-  }
-  
-  &::-webkit-scrollbar-thumb:hover {
-    background: #b5b5b7;
-  }
-`
-
-const ResidueSpan = styled.span<{ isSelected?: boolean; isHighlighted?: boolean }>`
-  cursor: pointer;
-  padding: 0 1px;
-  border-radius: 2px;
-  transition: all 0.2s;
-  
-  ${props => props.isSelected && `
-    background-color: #202123;
-    color: #ffffff;
-  `}
-  
-  ${props => props.isHighlighted && !props.isSelected && `
-    background-color: #e3f2fd;
-    color: #1976d2;
-  `}
-  
-  &:hover {
-    background-color: ${props => props.isSelected ? '#202123' : '#d1d1d3'};
-    color: ${props => props.isSelected ? '#ffffff' : '#202123'};
-  }
-`
-
-const SequenceInfo = styled.div`
-  font-size: 0.625rem;
-  color: #8e8ea0;
-  margin-top: 0.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`
-
-const DropdownWrapper = styled.div`
-  position: relative;
-`
-
-const VersionDropdown = styled.select`
-  padding: 0.375rem 0.75rem;
-  border: 1px solid #e5e5e7;
-  border-radius: 0.375rem;
-  background-color: #ffffff;
-  color: #202123;
-  font-size: 0.75rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23202123' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.5rem center;
-  padding-right: 2rem;
-
-  &:hover {
-    background-color: #f7f7f8;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #202123;
-  }
-`
-
-const ToggleSwitch = styled.label`
-  position: relative;
-  display: inline-block;
-  width: 32px;
-  height: 18px;
-  
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  
-  span {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #e5e5e7;
-    transition: .4s;
-    border-radius: 34px;
-    
-    &:before {
-      position: absolute;
-      content: "";
-      height: 12px;
-      width: 12px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-  }
-  
-  input:checked + span {
-    background-color: #202123;
-  }
-  
-  input:checked + span:before {
-    transform: translateX(14px);
-  }
-`
+import useToggles from 'toggles'
 
 export const MoleculeViewer: FC = () => {
   const [molecule, { setAppearance, setSelection, setGranularity, setQuality, setCamera, setStylePreset, setRepresentationPreset }] = useMolstar('main-viewer')
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
-  const [showControls, setShowControls] = useState(true)
-  const [showNativePanel, setShowNativePanel] = useState(false)
+  const [{ controls, nativePanel, occlusion }, { toggle, close }] = useToggles(false, false, false)
   const nativePanelRef = useRef<HTMLDivElement>(null)
 
-  // Debug mounting/unmounting
-  useEffect(() => {
-    console.log('MoleculeViewer mounted')
-    return () => {
-      console.log('MoleculeViewer unmounted')
-    }
-  }, [])
-
-  // Get current state from molecule
   const activeBackground = molecule.background || 'white'
   const activeQuality = molecule.quality?.level || 'medium'
 
-  // Local state for visual effects
-  const [customColor, setCustomColor] = useState('#ffffff')
   const [brightnessAdjust, setBrightnessAdjust] = useState(0) // -100 to 100, 0 is neutral
   const [currentVersion, setCurrentVersion] = useState('v3')
   const [versions] = useState([
@@ -738,7 +31,6 @@ export const MoleculeViewer: FC = () => {
     { id: 'v2', name: 'v2', date: '2024-01-20' },
     { id: 'v3', name: 'v3', date: '2024-01-25' }
   ])
-  const [occlusionEnabled, setOcclusionEnabled] = useState(false)
   const [occlusionSettings, setOcclusionSettings] = useState({
     samples: 32,
     multiScale: {
@@ -1006,24 +298,24 @@ export const MoleculeViewer: FC = () => {
           )}
           <MolstarContainer ref={molecule.ref} />
           <NativeToolsButton
-            onClick={() => setShowNativePanel(!showNativePanel)}
+            onClick={() => toggle(nativePanel)}
             title="Native Molstar Tools"
           >
             <FiTool />
           </NativeToolsButton>
           <HamburgerButton
-            onClick={() => setShowControls(!showControls)}
-            title={showControls ? 'Hide controls panel' : 'Show controls panel'}
+            onClick={() => toggle(controls)}
+            title={controls.isOpen ? 'Hide controls panel' : 'Show controls panel'}
           >
-            {showControls ? <FiX /> : <FiMenu />}
+            {controls.isOpen ? <FiX /> : <FiMenu />}
           </HamburgerButton>
         </ViewerContent>
 
         {/* Native Tools Panel */}
-        <NativePanelSidebar isOpen={showNativePanel} ref={nativePanelRef}>
+        <NativePanelSidebar isOpen={nativePanel.isOpen} ref={nativePanelRef}>
           <NativePanelHeader>
             <h3>Native Molstar Tools</h3>
-            <CloseButton onClick={() => setShowNativePanel(false)}>
+            <CloseButton onClick={() => close(nativePanel)}>
               <FiX size={20} />
             </CloseButton>
           </NativePanelHeader>
@@ -1037,7 +329,7 @@ export const MoleculeViewer: FC = () => {
           </NativePanelContent>
         </NativePanelSidebar>
 
-        {showControls && (
+        {controls.isOpen && (
           <ControlsPanel>
             <ControlGroup>
               <Label>Camera Controls</Label>
@@ -1059,17 +351,13 @@ export const MoleculeViewer: FC = () => {
               <ButtonGroup>
                 <SmallButton
                   isActive={molecule.background === 'white'}
-                  onClick={() => {
-                    setAppearance({ background: 'white' })
-                  }}
+                  onClick={() => setAppearance({ background: 'white' })}
                 >
                   White
                 </SmallButton>
                 <SmallButton
                   isActive={molecule.background === 'black'}
-                  onClick={() => {
-                    setAppearance({ background: 'black' })
-                  }}
+                  onClick={() => setAppearance({ background: 'black' })}
                 >
                   Black
                 </SmallButton>
@@ -1084,7 +372,6 @@ export const MoleculeViewer: FC = () => {
                       return bg.startsWith('#') ? bg : '#ffffff'
                     })()}
                     onChange={(e) => {
-                      setCustomColor(e.target.value)
                       setAppearance({ background: e.target.value })
                     }}
                   />
@@ -1157,9 +444,10 @@ export const MoleculeViewer: FC = () => {
                 <ToggleSwitch>
                   <input
                     type="checkbox"
-                    checked={occlusionEnabled}
+                    checked={occlusion.isChecked}
                     onChange={(e) => {
-                      setOcclusionEnabled(e.target.checked)
+                      toggle(occlusion)
+                      // setOcclusionEnabled(e.target.checked)
                       setQuality({
                         occlusion: e.target.checked ? {
                           enabled: true,
@@ -1172,7 +460,7 @@ export const MoleculeViewer: FC = () => {
                 </ToggleSwitch>
               </SliderLabel>
 
-              {occlusionEnabled && (
+              {occlusion.isOpen && (
                 <>
                   <SliderLabel>
                     <span>Samples</span>
@@ -2321,3 +1609,704 @@ export const MoleculeViewer: FC = () => {
     </Container >
   )
 }
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+`
+
+const Header = styled.header`
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e5e7;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`
+
+const Title = styled.h2`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #202123;
+  margin: 0;
+`
+
+const Controls = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`
+
+const ControlButton = styled.button`
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #e5e5e7;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #202123;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #f7f7f8;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+const ViewerContainer = styled.div<{ bgColor?: string }>`
+  flex: 1;
+  position: relative;
+  background-color: ${props => {
+    if (props.bgColor === 'transparent') return 'transparent';
+    if (props.bgColor === 'black') return '#000000';
+    if (props.bgColor === 'white') return '#ffffff';
+    return props.bgColor || '#ffffff';
+  }};
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+`
+
+const ViewerContent = styled.div`
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+`
+
+const NativePanelSidebar = styled.div<{ isOpen: boolean }>`
+  position: absolute;
+  top: 0;
+  right: ${props => props.isOpen ? '0' : '-400px'};
+  width: 400px;
+  height: 100%;
+  background: white;
+  border-left: 1px solid #e5e5e7;
+  transition: right 0.3s ease;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  box-shadow: ${props => props.isOpen ? '-2px 0 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  pointer-events: ${props => props.isOpen ? 'auto' : 'none'};
+`
+
+const NativePanelHeader = styled.div`
+  padding: 1rem;
+  border-bottom: 1px solid #e5e5e7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #202123;
+  }
+`
+
+const NativePanelContent = styled.div`
+  flex: 1;
+  overflow-y: auto;
+`
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #718096;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: #202123;
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`
+
+const NativeToolsButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 4rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+    color: #4a5568;
+  }
+`
+
+const HamburgerButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: #202123;
+  
+  &:hover {
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`
+
+const ControlsPanel = styled.div`
+  width: 280px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-left: 1px solid #e5e5e7;
+  background-color: #ffffff;
+  padding: 1rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  
+  /* Custom scrollbar styling */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #f7f7f8;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #d5d5d7;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #b5b5b7;
+  }
+`
+
+const LoadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 10;
+`
+
+const shimmer = keyframes`
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+`
+
+const LoadingText = styled.div`
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+  color: #8e8ea0;
+  background: linear-gradient(
+    90deg,
+    #8e8ea0 0%,
+    #8e8ea0 20%,
+    #c5c5d2 50%,
+    #8e8ea0 80%,
+    #8e8ea0 100%
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: ${shimmer} 2s linear infinite;
+`
+
+const MolstarContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  position: relative;
+  
+  .msp-plugin {
+    width: 100% !important;
+    height: 100% !important;
+  }
+`
+
+const ControlGroup = styled.div`
+  margin-bottom: 1.5rem;
+`
+
+const Label = styled.label`
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #8e8ea0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+`
+
+const ButtonGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+`
+
+const SmallButton = styled.button<{ isActive?: boolean }>`
+  padding: 0.25rem 0.5rem;
+  border: 1px solid ${props => props.isActive ? '#202123' : '#e5e5e7'};
+  border-radius: 0.25rem;
+  background-color: ${props => props.isActive ? '#202123' : '#ffffff'};
+  color: ${props => props.isActive ? '#ffffff' : '#202123'};
+  font-size: 0.625rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: ${props => props.isActive ? '#202123' : '#f7f7f8'};
+  }
+`
+
+const ColorPickerWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`
+
+const ColorPickerInput = styled.input`
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid #e5e5e7;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  background: transparent;
+  
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 0.25rem;
+  }
+`
+
+const Slider = styled.input`
+  width: 100%;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e5e5e7;
+  outline: none;
+  border-radius: 2px;
+  
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #202123;
+    cursor: pointer;
+    border-radius: 50%;
+  }
+  
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #202123;
+    cursor: pointer;
+    border-radius: 50%;
+    border: none;
+  }
+`
+
+const SliderLabel = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+  font-size: 0.625rem;
+  color: #202123;
+`
+
+const SliderRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+`
+
+const ResetButton = styled.button`
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #8e8ea0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    color: #202123;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`
+
+const ColorPicker = styled.input`
+  width: 32px;
+  height: 24px;
+  border: 1px solid #e5e5e7;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  
+  &::-webkit-color-swatch-wrapper {
+    padding: 2px;
+  }
+  
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 2px;
+  }
+`
+
+const LevelItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #f7f7f8;
+  border-radius: 4px;
+`
+
+const LevelInput = styled.input`
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #e5e5e7;
+  border-radius: 4px;
+  font-size: 12px;
+`
+
+const RemoveButton = styled.button`
+  background: transparent;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  padding: 4px;
+  
+  &:hover {
+    color: #c82333;
+  }
+`
+
+const AddButton = styled.button`
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid #e5e5e7;
+  border-radius: 4px;
+  background: #fff;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 8px;
+  
+  &:hover {
+    background: #f7f7f8;
+  }
+`
+
+const ScreenshotDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 280px;
+`
+
+const ScreenshotPreview = styled.div`
+  width: 100%;
+  height: 150px;
+  border: 1px solid #e5e5e7;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  background: #f7f7f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+`
+
+const ScreenshotOptions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`
+
+const ScreenshotRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`
+
+const ScreenshotButton = styled.button`
+  flex: 1;
+  padding: 8px 16px;
+  border: 1px solid #e5e5e7;
+  border-radius: 4px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f7f7f8;
+  }
+  
+  &:active {
+    background: #e5e5e7;
+  }
+`
+
+const FormatSelect = styled.select`
+  padding: 6px 12px;
+  border: 1px solid #e5e5e7;
+  border-radius: 4px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+`
+
+const SelectDropdown = styled.select`
+  width: 100%;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #e5e5e7;
+  border-radius: 0.25rem;
+  background-color: #ffffff;
+  color: #202123;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background-color: #f7f7f8;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #202123;
+  }
+`
+
+const SequenceViewer = styled.div`
+  font-family: monospace;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  background-color: #f7f7f8;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 200px;
+  overflow-y: auto;
+  
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #e5e5e7;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: #d5d5d7;
+    border-radius: 3px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: #b5b5b7;
+  }
+`
+
+const ResidueSpan = styled.span<{ isSelected?: boolean; isHighlighted?: boolean }>`
+  cursor: pointer;
+  padding: 0 1px;
+  border-radius: 2px;
+  transition: all 0.2s;
+  
+  ${props => props.isSelected && `
+    background-color: #202123;
+    color: #ffffff;
+  `}
+  
+  ${props => props.isHighlighted && !props.isSelected && `
+    background-color: #e3f2fd;
+    color: #1976d2;
+  `}
+  
+  &:hover {
+    background-color: ${props => props.isSelected ? '#202123' : '#d1d1d3'};
+    color: ${props => props.isSelected ? '#ffffff' : '#202123'};
+  }
+`
+
+const SequenceInfo = styled.div`
+  font-size: 0.625rem;
+  color: #8e8ea0;
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
+
+const DropdownWrapper = styled.div`
+  position: relative;
+`
+
+const VersionDropdown = styled.select`
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #e5e5e7;
+  border-radius: 0.375rem;
+  background-color: #ffffff;
+  color: #202123;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23202123' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 2rem;
+
+  &:hover {
+    background-color: #f7f7f8;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #202123;
+  }
+`
+
+const ToggleSwitch = styled.label`
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  span {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #e5e5e7;
+    transition: .4s;
+    border-radius: 34px;
+    
+    &:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+  }
+  
+  input:checked + span {
+    background-color: #202123;
+  }
+  
+  input:checked + span:before {
+    transform: translateX(14px);
+  }
+`

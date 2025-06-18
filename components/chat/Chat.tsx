@@ -1,5 +1,45 @@
 import styled from '@emotion/styled'
 
+const mockMessages = [
+  { id: '1', text: 'Can you help me analyze the structure of 1TQN?', isUser: true },
+  { id: '2', text: 'I\'d be happy to help you analyze the structure of 1TQN. This is a trypsin-BPTI complex. Let me load the structure for you.', isUser: false },
+  { id: '3', text: 'What are the key binding interactions?', isUser: true },
+  { id: '4', text: 'The key interactions include several hydrogen bonds and a salt bridge between the inhibitor and the enzyme active site.', isUser: false },
+]
+
+export function Chat() {
+  return (
+    <Container>
+      <Header>
+        <Title>Protein folding analysis</Title>
+      </Header>
+      <MessagesContainer>
+        {mockMessages.map(message => (
+          <MessageGroup key={message.id} isUser={message.isUser}>
+            <MessageBubble isUser={message.isUser}>
+              {message.text}
+            </MessageBubble>
+          </MessageGroup>
+        ))}
+      </MessagesContainer>
+      <InputContainer>
+        <InputWrapper>
+          <Input
+            type="text"
+            placeholder="Send a message..."
+            disabled
+          />
+          <SendButton disabled>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+            </svg>
+          </SendButton>
+        </InputWrapper>
+      </InputContainer>
+    </Container>
+  )
+}
+
 const Container = styled.div`
   display: flex;
   flex-direction: column;
@@ -83,43 +123,3 @@ const SendButton = styled.button`
     color: #202123;
   }
 `
-
-const mockMessages = [
-  { id: '1', text: 'Can you help me analyze the structure of 1TQN?', isUser: true },
-  { id: '2', text: 'I\'d be happy to help you analyze the structure of 1TQN. This is a trypsin-BPTI complex. Let me load the structure for you.', isUser: false },
-  { id: '3', text: 'What are the key binding interactions?', isUser: true },
-  { id: '4', text: 'The key interactions include several hydrogen bonds and a salt bridge between the inhibitor and the enzyme active site.', isUser: false },
-]
-
-export function Chat() {
-  return (
-    <Container>
-      <Header>
-        <Title>Protein folding analysis</Title>
-      </Header>
-      <MessagesContainer>
-        {mockMessages.map(message => (
-          <MessageGroup key={message.id} isUser={message.isUser}>
-            <MessageBubble isUser={message.isUser}>
-              {message.text}
-            </MessageBubble>
-          </MessageGroup>
-        ))}
-      </MessagesContainer>
-      <InputContainer>
-        <InputWrapper>
-          <Input
-            type="text"
-            placeholder="Send a message..."
-            disabled
-          />
-          <SendButton disabled>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-            </svg>
-          </SendButton>
-        </InputWrapper>
-      </InputContainer>
-    </Container>
-  )
-}

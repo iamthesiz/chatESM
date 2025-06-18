@@ -1,8 +1,55 @@
 /** @jsxImportSource @emotion/react */
 import styled from '@emotion/styled'
 import { useState } from 'react'
-import { BiSidebar } from 'react-icons/bi'
-import { HiOutlinePencilSquare } from 'react-icons/hi2'
+import * as Icons from 'react-icons/bi'
+import * as Icons2 from 'react-icons/hi2'
+
+const BiSidebar = Icons.BiSidebar as any
+const HiOutlinePencilSquare = Icons2.HiOutlinePencilSquare as any
+interface Chat {
+  id: string
+  title: string
+  timestamp: Date
+}
+
+const mockChats: Chat[] = [
+  { id: '1', title: 'Protein folding analysis', timestamp: new Date() },
+  { id: '2', title: 'ESM-2 sequence design', timestamp: new Date() },
+  { id: '3', title: 'Binding site prediction', timestamp: new Date() },
+  { id: '4', title: 'Structure comparison', timestamp: new Date() },
+]
+
+interface ChatListProps {
+  onToggleSidebar?: () => void
+}
+
+export function ChatList({ onToggleSidebar }: ChatListProps) {
+  const [selectedChatId, setSelectedChatId] = useState<string>('1')
+
+  return (
+    <Container>
+      <Header>
+        <IconButton onClick={onToggleSidebar} title="Toggle sidebar">
+          <BiSidebar />
+        </IconButton>
+        <IconButton title="New chat">
+          <HiOutlinePencilSquare />
+        </IconButton>
+      </Header>
+      <ChatItemsContainer>
+        {mockChats.map(chat => (
+          <ChatItem
+            key={chat.id}
+            isActive={chat.id === selectedChatId}
+            onClick={() => setSelectedChatId(chat.id)}
+          >
+            {chat.title}
+          </ChatItem>
+        ))}
+      </ChatItemsContainer>
+    </Container>
+  )
+}
 
 const Container = styled.div`
   display: flex;
@@ -69,48 +116,3 @@ const ChatItem = styled.div<{ isActive: boolean }>`
     background-color: ${props => props.isActive ? '#202123' : '#f7f7f8'};
   }
 `
-
-interface Chat {
-  id: string
-  title: string
-  timestamp: Date
-}
-
-const mockChats: Chat[] = [
-  { id: '1', title: 'Protein folding analysis', timestamp: new Date() },
-  { id: '2', title: 'ESM-2 sequence design', timestamp: new Date() },
-  { id: '3', title: 'Binding site prediction', timestamp: new Date() },
-  { id: '4', title: 'Structure comparison', timestamp: new Date() },
-]
-
-interface ChatListProps {
-  onToggleSidebar?: () => void
-}
-
-export function ChatList({ onToggleSidebar }: ChatListProps) {
-  const [selectedChatId, setSelectedChatId] = useState<string>('1')
-
-  return (
-    <Container>
-      <Header>
-        <IconButton onClick={onToggleSidebar} title="Toggle sidebar">
-          <BiSidebar />
-        </IconButton>
-        <IconButton title="New chat">
-          <HiOutlinePencilSquare />
-        </IconButton>
-      </Header>
-      <ChatItemsContainer>
-        {mockChats.map(chat => (
-          <ChatItem
-            key={chat.id}
-            isActive={chat.id === selectedChatId}
-            onClick={() => setSelectedChatId(chat.id)}
-          >
-            {chat.title}
-          </ChatItem>
-        ))}
-      </ChatItemsContainer>
-    </Container>
-  )
-}

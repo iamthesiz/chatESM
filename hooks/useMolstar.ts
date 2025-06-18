@@ -838,7 +838,13 @@ export function useMolstar(providedId?: string): [MoleculeInstance, UseMolstarRe
     }
 
     if (config.lighting !== undefined) setIllumination(config.lighting, lighten, darken)
-    if (config.shadows !== undefined) setShadow(typeof config.shadows === 'boolean' ? { on: config.shadows } : config.shadows)
+    if (config.shadows !== undefined) {
+      if (typeof config.shadows === 'boolean') {
+        setShadow({ on: config.shadows })
+      } else {
+        setShadow({ on: config.shadows.enabled, params: { quality: config.shadows.quality } })
+      }
+    }
     if (config.fog !== undefined) setFog(config.fog)
 
     if (config.postprocessing) {
