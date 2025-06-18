@@ -3,15 +3,15 @@ import { keyframes } from '@emotion/react'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useMolstar } from '../../useMolstar'
 import type { FC } from 'react'
-import * as React from 'react'
 import { NativeControlPanel } from './NativeControlPanel'
-import { FiTool, FiX, FiRefreshCw } from 'react-icons/fi'
+import { FiTool, FiRefreshCw, FiX, FiMenu } from 'react-icons/fi'
 import Rotate from '../Rotate'
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
 `
 
 const Header = styled.header`
@@ -66,12 +66,15 @@ const ViewerContainer = styled.div<{ bgColor?: string }>`
     return props.bgColor || '#ffffff';
   }};
   display: flex;
+  width: 100%;
   overflow: hidden;
 `
 
 const ViewerContent = styled.div`
   flex: 1;
   position: relative;
+  overflow: hidden;
+  min-width: 0;
 `
 
 const NativePanelSidebar = styled.div<{ isOpen: boolean }>`
@@ -87,6 +90,7 @@ const NativePanelSidebar = styled.div<{ isOpen: boolean }>`
   display: flex;
   flex-direction: column;
   box-shadow: ${props => props.isOpen ? '-2px 0 8px rgba(0, 0, 0, 0.1)' : 'none'};
+  pointer-events: ${props => props.isOpen ? 'auto' : 'none'};
 `
 
 const NativePanelHeader = styled.div`
@@ -120,6 +124,9 @@ const CloseButton = styled.button`
   cursor: pointer;
   color: #718096;
   transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   
   &:hover {
     color: #202123;
@@ -139,18 +146,18 @@ const NativeToolsButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background-color: #ffffff;
-  border: 1px solid #e5e5e7;
+  width: 40px;
+  height: 40px;
+  border-radius: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: none;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    background-color: #f7f7f8;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
   
   svg {
@@ -160,7 +167,7 @@ const NativeToolsButton = styled.button`
   }
 `
 
-const HamburgerButton = styled.button<{ isOpen?: boolean }>`
+const HamburgerButton = styled.button`
   position: absolute;
   top: 1rem;
   right: 1rem;
@@ -174,39 +181,20 @@ const HamburgerButton = styled.button<{ isOpen?: boolean }>`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
   transition: all 0.2s;
+  color: #202123;
   
   &:hover {
     background-color: rgba(255, 255, 255, 1);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   }
   
-  span {
-    display: block;
+  svg {
     width: 20px;
-    height: 2px;
-    background-color: #202123;
-    transition: all 0.3s;
-    transform-origin: center;
+    height: 20px;
   }
-  
-  ${props => props.isOpen && `
-    span:nth-of-type(1) {
-      transform: rotate(45deg) translate(5px, 5px);
-    }
-    
-    span:nth-of-type(2) {
-      opacity: 0;
-    }
-    
-    span:nth-of-type(3) {
-      transform: rotate(-45deg) translate(5px, -5px);
-    }
-  `}
 `
 
 const ControlsPanel = styled.div`
@@ -721,17 +709,25 @@ const ToggleSwitch = styled.label`
 `
 
 export const MoleculeViewer: FC = () => {
-  const [molecule, { setAppearance, setSelection, setQuality, setCamera, setStylePreset, setRepresentationPreset }] = useMolstar('main-viewer')
+  const [molecule, { setAppearance, setSelection, setGranularity, setQuality, setCamera, setStylePreset, setRepresentationPreset }] = useMolstar('main-viewer')
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [showNativePanel, setShowNativePanel] = useState(false)
   const nativePanelRef = useRef<HTMLDivElement>(null)
-  
+
+  // Debug mounting/unmounting
+  useEffect(() => {
+    console.log('MoleculeViewer mounted')
+    return () => {
+      console.log('MoleculeViewer unmounted')
+    }
+  }, [])
+
   // Get current state from molecule
   const activeBackground = molecule.background || 'white'
   const activeQuality = molecule.quality?.level || 'medium'
-  
+
   // Local state for visual effects
   const [customColor, setCustomColor] = useState('#ffffff')
   const [brightnessAdjust, setBrightnessAdjust] = useState(0) // -100 to 100, 0 is neutral
@@ -782,7 +778,7 @@ export const MoleculeViewer: FC = () => {
   const [clippingFar, setClippingFar] = useState(true)
   const [clippingMinNear, setClippingMinNear] = useState(5)
   const [animationType, setAnimationType] = useState<'off' | 'spin' | 'rock'>('off')
-  
+
   // Screenshot state
   const [showScreenshotDropdown, setShowScreenshotDropdown] = useState(false)
   const [screenshotFormat, setScreenshotFormat] = useState<'png' | 'jpeg' | 'webp'>('png')
@@ -791,7 +787,7 @@ export const MoleculeViewer: FC = () => {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null)
   const [copyButtonText, setCopyButtonText] = useState('Copy')
   const screenshotDropdownRef = useRef<HTMLDivElement>(null)
-  
+
   // Camera state
   const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective')
   const [axesEnabled, setAxesEnabled] = useState(false)
@@ -804,19 +800,7 @@ export const MoleculeViewer: FC = () => {
   const [eyeSeparation, setEyeSeparation] = useState(0.064)
   const [stereoFocus, setStereoFocus] = useState(10)
   const [fieldOfView, setFieldOfView] = useState(45)
-  
-  // Sequence viewer state
-  const [selectedResidues, setSelectedResidues] = useState<number[]>([])
-  const [highlightedResidues, setHighlightedResidues] = useState<number[]>([])
-  
-  // Mock sequence - fixed to prevent changing on hover
-  const mockSequence = useMemo(() => {
-    const residues = 'ACDEFGHIKLMNPQRSTVWY'
-    return Array.from({ length: 280 }, (_, i) => {
-      // Use a deterministic way to generate sequence
-      return residues[(i * 7 + 3) % residues.length]
-    })
-  }, [])
+
 
   // Click outside handler for screenshot dropdown
   useEffect(() => {
@@ -835,8 +819,6 @@ export const MoleculeViewer: FC = () => {
     }
   }, [showScreenshotDropdown])
 
-  // Removed click outside handler for native panel - it should stay open
-
   // Load initial structure once initialized
   useEffect(() => {
     if (molecule.isInitialized && !loaded) {
@@ -850,7 +832,8 @@ export const MoleculeViewer: FC = () => {
         protein: {
           style: 'cartoon',
           color: 'by-chain'
-        }
+        },
+        hideNativeControls: true
       }).then(() => {
         setLoaded(true)
         setLoading(false)
@@ -873,7 +856,7 @@ export const MoleculeViewer: FC = () => {
             <ControlButton onClick={() => {
               if (!showScreenshotDropdown) {
                 // Generate preview
-                molecule.screenshot({ 
+                molecule.screenshot({
                   download: false,
                   transparent: screenshotTransparent
                 }).then((dataUrl: string | void) => {
@@ -886,7 +869,7 @@ export const MoleculeViewer: FC = () => {
             }}>
               Screenshot
             </ControlButton>
-            
+
             {showScreenshotDropdown && (
               <ScreenshotDropdown>
                 {screenshotPreview && (
@@ -894,11 +877,11 @@ export const MoleculeViewer: FC = () => {
                     <img src={screenshotPreview} alt="Screenshot preview" />
                   </ScreenshotPreview>
                 )}
-                
+
                 <ScreenshotOptions>
                   <ScreenshotRow>
                     <span>Format:</span>
-                    <FormatSelect 
+                    <FormatSelect
                       value={screenshotFormat}
                       onChange={(e) => setScreenshotFormat(e.target.value as 'png' | 'jpeg' | 'webp')}
                     >
@@ -907,7 +890,7 @@ export const MoleculeViewer: FC = () => {
                       <option value="webp">WebP</option>
                     </FormatSelect>
                   </ScreenshotRow>
-                  
+
                   <ScreenshotRow>
                     <span>Transparent:</span>
                     <ToggleSwitch>
@@ -917,7 +900,7 @@ export const MoleculeViewer: FC = () => {
                         onChange={(e) => {
                           setScreenshotTransparent(e.target.checked)
                           // Update preview
-                          molecule.screenshot({ 
+                          molecule.screenshot({
                             download: false,
                             transparent: e.target.checked
                           }).then((dataUrl: string | void) => {
@@ -930,7 +913,7 @@ export const MoleculeViewer: FC = () => {
                       <span></span>
                     </ToggleSwitch>
                   </ScreenshotRow>
-                  
+
                   <ScreenshotRow>
                     <span>Axes:</span>
                     <ToggleSwitch>
@@ -940,15 +923,15 @@ export const MoleculeViewer: FC = () => {
                         onChange={(e) => {
                           setScreenshotAxes(e.target.checked)
                           // Apply axes visibility temporarily for preview
-                          setCamera({ 
-                            axes: { 
+                          setCamera({
+                            axes: {
                               ...((molecule as any).state?.camera?.axes || {}),
-                              enabled: e.target.checked 
-                            } 
+                              enabled: e.target.checked
+                            }
                           })
                           // Update preview
                           setTimeout(() => {
-                            molecule.screenshot({ 
+                            molecule.screenshot({
                               download: false,
                               transparent: screenshotTransparent
                             }).then((dataUrl: string | void) => {
@@ -962,62 +945,32 @@ export const MoleculeViewer: FC = () => {
                       <span></span>
                     </ToggleSwitch>
                   </ScreenshotRow>
-                  
+
                   <ScreenshotRow>
                     <ScreenshotButton onClick={async () => {
-                      const dataUrl = await molecule.screenshot({ 
-                        download: false,
-                        transparent: screenshotTransparent
-                      })
-                      
-                      // Copy to clipboard
-                      if (dataUrl && typeof dataUrl === 'string') {
-                        try {
-                          // Convert data URL to blob
-                          const response = await fetch(dataUrl)
-                          const blob = await response.blob()
-                          
-                          if ('ClipboardItem' in window) {
-                            // Convert to PNG for clipboard (most compatible)
-                            let clipboardBlob = blob
-                            if (screenshotFormat !== 'png') {
-                              // Convert to PNG for clipboard compatibility
-                              const img = new Image()
-                              img.src = dataUrl
-                              await new Promise(resolve => img.onload = resolve)
-                              
-                              const canvas = document.createElement('canvas')
-                              canvas.width = img.width
-                              canvas.height = img.height
-                              const ctx = canvas.getContext('2d')
-                              ctx?.drawImage(img, 0, 0)
-                              
-                              clipboardBlob = await new Promise<Blob>(resolve => {
-                                canvas.toBlob(blob => resolve(blob!), 'image/png')
-                              })
-                            }
-                            
-                            const item = new ClipboardItem({ 'image/png': clipboardBlob })
-                            await navigator.clipboard.write([item])
-                            
-                            // Show success feedback
-                            setCopyButtonText('Copied!')
-                            setTimeout(() => {
-                              setCopyButtonText('Copy')
-                            }, 1500)
-                          }
-                        } catch (err) {
-                          console.error('Failed to copy to clipboard:', err)
-                        }
+                      try {
+                        setCopyButtonText('Copied!')
+                        await molecule.copyScreenshot({
+                          transparent: screenshotTransparent,
+                          format: screenshotFormat,
+                          axes: screenshotAxes
+                        })
+                        setTimeout(() => {
+                          setCopyButtonText('Copy')
+                        }, 1500)
+                      } catch (err) {
+                        console.error('Failed to copy screenshot:', err)
                       }
                     }}>
                       {copyButtonText}
                     </ScreenshotButton>
-                    
-                    <ScreenshotButton onClick={() => {
-                      molecule.screenshot({ 
-                        download: true,
-                        transparent: screenshotTransparent
+
+                    <ScreenshotButton onClick={async () => {
+                      await molecule.downloadScreenshot({
+                        transparent: screenshotTransparent,
+                        format: screenshotFormat,
+                        axes: screenshotAxes,
+                        filename: `molecule-${Date.now()}.${screenshotFormat}`
                       })
                       setShowScreenshotDropdown(false)
                     }}>
@@ -1028,8 +981,8 @@ export const MoleculeViewer: FC = () => {
               </ScreenshotDropdown>
             )}
           </DropdownWrapper>
-          <VersionDropdown 
-            value={currentVersion} 
+          <VersionDropdown
+            value={currentVersion}
             onChange={(e) => {
               setCurrentVersion(e.target.value)
               // Here you would typically load a different version of the structure
@@ -1051,42 +1004,39 @@ export const MoleculeViewer: FC = () => {
               <LoadingText data-text="Loading structure...">Loading structure...</LoadingText>
             </LoadingOverlay>
           )}
-          <MolstarContainer ref={(molecule as any).containerRef} />
+          <MolstarContainer ref={molecule.ref} />
           <NativeToolsButton
             onClick={() => setShowNativePanel(!showNativePanel)}
             title="Native Molstar Tools"
           >
             <FiTool />
           </NativeToolsButton>
-          <HamburgerButton 
+          <HamburgerButton
             onClick={() => setShowControls(!showControls)}
-            isOpen={showControls}
             title={showControls ? 'Hide controls panel' : 'Show controls panel'}
           >
-            <span></span>
-            <span></span>
-            <span></span>
+            {showControls ? <FiX /> : <FiMenu />}
           </HamburgerButton>
         </ViewerContent>
-        
+
         {/* Native Tools Panel */}
         <NativePanelSidebar isOpen={showNativePanel} ref={nativePanelRef}>
           <NativePanelHeader>
             <h3>Native Molstar Tools</h3>
             <CloseButton onClick={() => setShowNativePanel(false)}>
-              <FiX />
+              <FiX size={20} />
             </CloseButton>
           </NativePanelHeader>
           <NativePanelContent>
-            <NativeControlPanel 
-              molecule={molecule} 
+            <NativeControlPanel
+              molecule={molecule}
               setAppearance={setAppearance}
               setStylePreset={setStylePreset}
               setRepresentationPreset={setRepresentationPreset}
             />
           </NativePanelContent>
         </NativePanelSidebar>
-        
+
         {showControls && (
           <ControlsPanel>
             <ControlGroup>
@@ -1107,16 +1057,16 @@ export const MoleculeViewer: FC = () => {
             <ControlGroup>
               <Label>Background</Label>
               <ButtonGroup>
-                <SmallButton 
-                  isActive={activeBackground === 'white'}
+                <SmallButton
+                  isActive={molecule.background === 'white'}
                   onClick={() => {
                     setAppearance({ background: 'white' })
                   }}
                 >
                   White
                 </SmallButton>
-                <SmallButton 
-                  isActive={activeBackground === 'black'}
+                <SmallButton
+                  isActive={molecule.background === 'black'}
                   onClick={() => {
                     setAppearance({ background: 'black' })
                   }}
@@ -1126,7 +1076,13 @@ export const MoleculeViewer: FC = () => {
                 <ColorPickerWrapper>
                   <ColorPickerInput
                     type="color"
-                    value={customColor}
+                    value={(() => {
+                      const bg = molecule.background
+                      if (bg === 'white') return '#ffffff'
+                      if (bg === 'black') return '#000000'
+                      if (bg === 'transparent') return '#ffffff'
+                      return bg.startsWith('#') ? bg : '#ffffff'
+                    })()}
                     onChange={(e) => {
                       setCustomColor(e.target.value)
                       setAppearance({ background: e.target.value })
@@ -1134,7 +1090,7 @@ export const MoleculeViewer: FC = () => {
                   />
                 </ColorPickerWrapper>
               </ButtonGroup>
-              
+
               <SliderLabel style={{ marginTop: '12px' }}>
                 <span>Brightness</span>
                 <span>{brightnessAdjust > 0 ? `+${brightnessAdjust}` : brightnessAdjust}%</span>
@@ -1150,27 +1106,27 @@ export const MoleculeViewer: FC = () => {
                     setBrightnessAdjust(value)
                     if (value < 0) {
                       // Negative values lighten
-                      setAppearance({ 
-                        postprocessing: { 
+                      setAppearance({
+                        postprocessing: {
                           lighten: Math.abs(value) / 100,
                           darken: undefined
-                        } 
+                        }
                       })
                     } else if (value > 0) {
                       // Positive values darken
-                      setAppearance({ 
-                        postprocessing: { 
+                      setAppearance({
+                        postprocessing: {
                           darken: value / 100,
                           lighten: undefined
-                        } 
+                        }
                       })
                     } else {
                       // Zero resets both
-                      setAppearance({ 
-                        postprocessing: { 
+                      setAppearance({
+                        postprocessing: {
                           lighten: undefined,
                           darken: undefined
-                        } 
+                        }
                       })
                     }
                   }}
@@ -1178,11 +1134,11 @@ export const MoleculeViewer: FC = () => {
                 <Rotate
                   onClick={() => {
                     setBrightnessAdjust(0)
-                    setAppearance({ 
-                      postprocessing: { 
+                    setAppearance({
+                      postprocessing: {
                         lighten: undefined,
                         darken: undefined
-                      } 
+                      }
                     })
                   }}
                 >
@@ -1195,7 +1151,7 @@ export const MoleculeViewer: FC = () => {
 
             <ControlGroup>
               <Label>Visual Effects</Label>
-              
+
               <SliderLabel>
                 <span>Occlusion</span>
                 <ToggleSwitch>
@@ -1204,7 +1160,7 @@ export const MoleculeViewer: FC = () => {
                     checked={occlusionEnabled}
                     onChange={(e) => {
                       setOcclusionEnabled(e.target.checked)
-                      setQuality({ 
+                      setQuality({
                         occlusion: e.target.checked ? {
                           enabled: true,
                           ...occlusionSettings
@@ -1215,7 +1171,7 @@ export const MoleculeViewer: FC = () => {
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               {occlusionEnabled && (
                 <>
                   <SliderLabel>
@@ -1231,7 +1187,7 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const newSettings = { ...occlusionSettings, samples: parseInt(e.target.value) }
                       setOcclusionSettings(newSettings)
-                      setQuality({ 
+                      setQuality({
                         occlusion: {
                           enabled: true,
                           ...newSettings
@@ -1253,7 +1209,7 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const newSettings = { ...occlusionSettings, radius: parseFloat(e.target.value) }
                       setOcclusionSettings(newSettings)
-                      setQuality({ 
+                      setQuality({
                         occlusion: {
                           enabled: true,
                           ...newSettings
@@ -1276,7 +1232,7 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const newSettings = { ...occlusionSettings, bias: parseFloat(e.target.value) }
                         setOcclusionSettings(newSettings)
-                        setQuality({ 
+                        setQuality({
                           occlusion: {
                             enabled: true,
                             ...newSettings
@@ -1288,7 +1244,7 @@ export const MoleculeViewer: FC = () => {
                       onClick={() => {
                         const newSettings = { ...occlusionSettings, bias: 0.8 }
                         setOcclusionSettings(newSettings)
-                        setQuality({ 
+                        setQuality({
                           occlusion: {
                             enabled: true,
                             ...newSettings
@@ -1316,7 +1272,7 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const newSettings = { ...occlusionSettings, blurKernelSize: parseInt(e.target.value) }
                         setOcclusionSettings(newSettings)
-                        setQuality({ 
+                        setQuality({
                           occlusion: {
                             enabled: true,
                             ...newSettings
@@ -1328,7 +1284,7 @@ export const MoleculeViewer: FC = () => {
                       onClick={() => {
                         const newSettings = { ...occlusionSettings, blurKernelSize: 15 }
                         setOcclusionSettings(newSettings)
-                        setQuality({ 
+                        setQuality({
                           occlusion: {
                             enabled: true,
                             ...newSettings
@@ -1355,7 +1311,7 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const newSettings = { ...occlusionSettings, blurDepthBias: parseFloat(e.target.value) }
                       setOcclusionSettings(newSettings)
-                      setQuality({ 
+                      setQuality({
                         occlusion: {
                           enabled: true,
                           ...newSettings
@@ -1377,7 +1333,7 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const newSettings = { ...occlusionSettings, resolutionScale: parseFloat(e.target.value) }
                       setOcclusionSettings(newSettings)
-                      setQuality({ 
+                      setQuality({
                         occlusion: {
                           enabled: true,
                           ...newSettings
@@ -1399,7 +1355,7 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const newSettings = { ...occlusionSettings, transparentThreshold: parseFloat(e.target.value) }
                       setOcclusionSettings(newSettings)
-                      setQuality({ 
+                      setQuality({
                         occlusion: {
                           enabled: true,
                           ...newSettings
@@ -1416,7 +1372,7 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const newSettings = { ...occlusionSettings, color: e.target.value }
                         setOcclusionSettings(newSettings)
-                        setQuality({ 
+                        setQuality({
                           occlusion: {
                             enabled: true,
                             ...newSettings
@@ -1433,12 +1389,12 @@ export const MoleculeViewer: FC = () => {
                         type="checkbox"
                         checked={occlusionSettings.multiScale.enabled}
                         onChange={(e) => {
-                          const newSettings = { 
-                            ...occlusionSettings, 
+                          const newSettings = {
+                            ...occlusionSettings,
                             multiScale: { ...occlusionSettings.multiScale, enabled: e.target.checked }
                           }
                           setOcclusionSettings(newSettings)
-                          setQuality({ 
+                          setQuality({
                             occlusion: {
                               enabled: true,
                               ...newSettings
@@ -1463,12 +1419,12 @@ export const MoleculeViewer: FC = () => {
                         step="0.5"
                         value={occlusionSettings.multiScale.nearThreshold}
                         onChange={(e) => {
-                          const newSettings = { 
-                            ...occlusionSettings, 
+                          const newSettings = {
+                            ...occlusionSettings,
                             multiScale: { ...occlusionSettings.multiScale, nearThreshold: parseFloat(e.target.value) }
                           }
                           setOcclusionSettings(newSettings)
-                          setQuality({ 
+                          setQuality({
                             occlusion: {
                               enabled: true,
                               ...newSettings
@@ -1488,12 +1444,12 @@ export const MoleculeViewer: FC = () => {
                         step="10"
                         value={occlusionSettings.multiScale.farThreshold}
                         onChange={(e) => {
-                          const newSettings = { 
-                            ...occlusionSettings, 
+                          const newSettings = {
+                            ...occlusionSettings,
                             multiScale: { ...occlusionSettings.multiScale, farThreshold: parseFloat(e.target.value) }
                           }
                           setOcclusionSettings(newSettings)
-                          setQuality({ 
+                          setQuality({
                             occlusion: {
                               enabled: true,
                               ...newSettings
@@ -1514,12 +1470,12 @@ export const MoleculeViewer: FC = () => {
                             onChange={(e) => {
                               const newLevels = [...occlusionSettings.multiScale.levels]
                               newLevels[index] = { ...level, radius: parseFloat(e.target.value) || 0 }
-                              const newSettings = { 
-                                ...occlusionSettings, 
+                              const newSettings = {
+                                ...occlusionSettings,
                                 multiScale: { ...occlusionSettings.multiScale, levels: newLevels }
                               }
                               setOcclusionSettings(newSettings)
-                              setQuality({ 
+                              setQuality({
                                 occlusion: {
                                   enabled: true,
                                   ...newSettings
@@ -1534,12 +1490,12 @@ export const MoleculeViewer: FC = () => {
                             onChange={(e) => {
                               const newLevels = [...occlusionSettings.multiScale.levels]
                               newLevels[index] = { ...level, blur: parseFloat(e.target.value) || 0 }
-                              const newSettings = { 
-                                ...occlusionSettings, 
+                              const newSettings = {
+                                ...occlusionSettings,
                                 multiScale: { ...occlusionSettings.multiScale, levels: newLevels }
                               }
                               setOcclusionSettings(newSettings)
-                              setQuality({ 
+                              setQuality({
                                 occlusion: {
                                   enabled: true,
                                   ...newSettings
@@ -1550,12 +1506,12 @@ export const MoleculeViewer: FC = () => {
                           <RemoveButton
                             onClick={() => {
                               const newLevels = occlusionSettings.multiScale.levels.filter((_, i) => i !== index)
-                              const newSettings = { 
-                                ...occlusionSettings, 
+                              const newSettings = {
+                                ...occlusionSettings,
                                 multiScale: { ...occlusionSettings.multiScale, levels: newLevels }
                               }
                               setOcclusionSettings(newSettings)
-                              setQuality({ 
+                              setQuality({
                                 occlusion: {
                                   enabled: true,
                                   ...newSettings
@@ -1570,12 +1526,12 @@ export const MoleculeViewer: FC = () => {
                       <AddButton
                         onClick={() => {
                           const newLevels = [...occlusionSettings.multiScale.levels, { radius: 2, blur: 1 }]
-                          const newSettings = { 
-                            ...occlusionSettings, 
+                          const newSettings = {
+                            ...occlusionSettings,
                             multiScale: { ...occlusionSettings.multiScale, levels: newLevels }
                           }
                           setOcclusionSettings(newSettings)
-                          setQuality({ 
+                          setQuality({
                             occlusion: {
                               enabled: true,
                               ...newSettings
@@ -1589,7 +1545,7 @@ export const MoleculeViewer: FC = () => {
                   )}
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Shadows</span>
                 <ToggleSwitch>
@@ -1598,15 +1554,15 @@ export const MoleculeViewer: FC = () => {
                     checked={shadowsEnabled}
                     onChange={(e) => {
                       setShadowsEnabled(e.target.checked)
-                      setAppearance({ 
-                        shadows: e.target.checked 
+                      setAppearance({
+                        shadows: e.target.checked
                       })
                     }}
                   />
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               <SliderLabel>
                 <span>Outline</span>
                 <ToggleSwitch>
@@ -1615,20 +1571,20 @@ export const MoleculeViewer: FC = () => {
                     checked={outlineEnabled}
                     onChange={(e) => {
                       setOutlineEnabled(e.target.checked)
-                      setQuality({ 
-                        postprocessing: { 
-                          outline: { 
-                            enabled: e.target.checked, 
-                            scale: outlineScale 
-                          } 
-                        } 
+                      setQuality({
+                        postprocessing: {
+                          outline: {
+                            enabled: e.target.checked,
+                            scale: outlineScale
+                          }
+                        }
                       })
                     }}
                   />
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               {outlineEnabled && (
                 <>
                   <SliderLabel>
@@ -1644,19 +1600,19 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const value = parseFloat(e.target.value)
                       setOutlineScale(value)
-                      setQuality({ 
-                        postprocessing: { 
-                          outline: { 
-                            enabled: true, 
-                            scale: value 
-                          } 
-                        } 
+                      setQuality({
+                        postprocessing: {
+                          outline: {
+                            enabled: true,
+                            scale: value
+                          }
+                        }
                       })
                     }}
                   />
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Depth of Field</span>
                 <ToggleSwitch>
@@ -1665,17 +1621,17 @@ export const MoleculeViewer: FC = () => {
                     checked={dofEnabled}
                     onChange={(e) => {
                       setDofEnabled(e.target.checked)
-                      setQuality({ 
-                        postprocessing: { 
-                          blur: e.target.checked 
-                        } 
+                      setQuality({
+                        postprocessing: {
+                          blur: e.target.checked
+                        }
                       })
                     }}
                   />
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               {dofEnabled && (
                 <>
                   <SliderLabel>
@@ -1692,13 +1648,13 @@ export const MoleculeViewer: FC = () => {
                       const value = parseInt(e.target.value)
                       const newSettings = { ...dofSettings, blurSize: value }
                       setDofSettings(newSettings)
-                      setQuality({ 
-                        postprocessing: { 
+                      setQuality({
+                        postprocessing: {
                           blur: {
                             enabled: true,
                             ...newSettings
                           }
-                        } 
+                        }
                       })
                     }}
                   />
@@ -1717,13 +1673,13 @@ export const MoleculeViewer: FC = () => {
                       const value = parseFloat(e.target.value)
                       const newSettings = { ...dofSettings, blurSpread: value }
                       setDofSettings(newSettings)
-                      setQuality({ 
-                        postprocessing: { 
+                      setQuality({
+                        postprocessing: {
                           blur: {
                             enabled: true,
                             ...newSettings
                           }
-                        } 
+                        }
                       })
                     }}
                   />
@@ -1742,13 +1698,13 @@ export const MoleculeViewer: FC = () => {
                       const value = parseFloat(e.target.value)
                       const newSettings = { ...dofSettings, inFocus: value }
                       setDofSettings(newSettings)
-                      setQuality({ 
-                        postprocessing: { 
+                      setQuality({
+                        postprocessing: {
                           blur: {
                             enabled: true,
                             ...newSettings
                           }
-                        } 
+                        }
                       })
                     }}
                   />
@@ -1767,13 +1723,13 @@ export const MoleculeViewer: FC = () => {
                       const value = parseFloat(e.target.value)
                       const newSettings = { ...dofSettings, ppm: value }
                       setDofSettings(newSettings)
-                      setQuality({ 
-                        postprocessing: { 
+                      setQuality({
+                        postprocessing: {
                           blur: {
                             enabled: true,
                             ...newSettings
                           }
-                        } 
+                        }
                       })
                     }}
                   />
@@ -1786,13 +1742,13 @@ export const MoleculeViewer: FC = () => {
                         const value = e.target.value as 'camera-target' | 'scene-center'
                         const newSettings = { ...dofSettings, center: value }
                         setDofSettings(newSettings)
-                        setQuality({ 
-                          postprocessing: { 
+                        setQuality({
+                          postprocessing: {
                             blur: {
                               enabled: true,
                               ...newSettings
                             }
-                          } 
+                          }
                         })
                       }}
                       style={{
@@ -1816,13 +1772,13 @@ export const MoleculeViewer: FC = () => {
                         const value = e.target.value as 'plane' | 'sphere'
                         const newSettings = { ...dofSettings, mode: value }
                         setDofSettings(newSettings)
-                        setQuality({ 
-                          postprocessing: { 
+                        setQuality({
+                          postprocessing: {
                             blur: {
                               enabled: true,
                               ...newSettings
                             }
-                          } 
+                          }
                         })
                       }}
                       style={{
@@ -1839,7 +1795,7 @@ export const MoleculeViewer: FC = () => {
                   </SliderLabel>
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Fog</span>
                 <ToggleSwitch>
@@ -1848,7 +1804,7 @@ export const MoleculeViewer: FC = () => {
                     checked={fogEnabled}
                     onChange={(e) => {
                       setFogEnabled(e.target.checked)
-                      setAppearance({ 
+                      setAppearance({
                         fog: e.target.checked ? {
                           enabled: true,
                           intensity: fogIntensity
@@ -1859,7 +1815,7 @@ export const MoleculeViewer: FC = () => {
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               {fogEnabled && (
                 <>
                   <SliderLabel>
@@ -1874,17 +1830,17 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const value = parseInt(e.target.value)
                       setFogIntensity(value)
-                      setAppearance({ 
-                        fog: { 
-                          enabled: true, 
-                          intensity: value 
-                        } 
+                      setAppearance({
+                        fog: {
+                          enabled: true,
+                          intensity: value
+                        }
                       })
                     }}
                   />
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Clipping</span>
                 <span>{clippingRadius}%</span>
@@ -1897,7 +1853,7 @@ export const MoleculeViewer: FC = () => {
                 onChange={(e) => {
                   const value = parseInt(e.target.value)
                   setClippingRadius(value)
-                  setCamera({ 
+                  setCamera({
                     clipping: {
                       radius: value,
                       far: clippingFar,
@@ -1906,7 +1862,7 @@ export const MoleculeViewer: FC = () => {
                   })
                 }}
               />
-              
+
               {clippingRadius > 0 && (
                 <>
                   <SliderLabel>
@@ -1917,7 +1873,7 @@ export const MoleculeViewer: FC = () => {
                         checked={clippingFar}
                         onChange={(e) => {
                           setClippingFar(e.target.checked)
-                          setCamera({ 
+                          setCamera({
                             clipping: {
                               radius: clippingRadius,
                               far: e.target.checked,
@@ -1929,7 +1885,7 @@ export const MoleculeViewer: FC = () => {
                       <span></span>
                     </ToggleSwitch>
                   </SliderLabel>
-                  
+
                   <SliderLabel>
                     <span>Min Near</span>
                     <span>{clippingMinNear.toFixed(1)}</span>
@@ -1943,7 +1899,7 @@ export const MoleculeViewer: FC = () => {
                     onChange={(e) => {
                       const value = parseFloat(e.target.value)
                       setClippingMinNear(value)
-                      setCamera({ 
+                      setCamera({
                         clipping: {
                           radius: clippingRadius,
                           far: clippingFar,
@@ -1954,40 +1910,40 @@ export const MoleculeViewer: FC = () => {
                   />
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Animation</span>
                 <span>{animationType === 'off' ? 'Off' : animationType.charAt(0).toUpperCase() + animationType.slice(1)}</span>
               </SliderLabel>
               <ButtonGroup>
-                <SmallButton 
+                <SmallButton
                   isActive={animationType === 'off'}
                   onClick={() => {
                     setAnimationType('off')
-                    setCamera({ 
-                      animation: 'off' 
+                    setCamera({
+                      animation: 'off'
                     })
                   }}
                 >
                   Off
                 </SmallButton>
-                <SmallButton 
+                <SmallButton
                   isActive={animationType === 'spin'}
                   onClick={() => {
                     setAnimationType('spin')
-                    setCamera({ 
-                      animation: 'spin' 
+                    setCamera({
+                      animation: 'spin'
                     })
                   }}
                 >
                   Spin
                 </SmallButton>
-                <SmallButton 
+                <SmallButton
                   isActive={animationType === 'rock'}
                   onClick={() => {
                     setAnimationType('rock')
-                    setCamera({ 
-                      animation: 'rock' 
+                    setCamera({
+                      animation: 'rock'
                     })
                   }}
                 >
@@ -2000,27 +1956,21 @@ export const MoleculeViewer: FC = () => {
             <ControlGroup>
               <Label>Quality</Label>
               <ButtonGroup>
-                <SmallButton 
+                <SmallButton
                   isActive={activeQuality === 'low'}
-                  onClick={() => {
-                    setQuality({ level: 'low' })
-                  }}
+                  onClick={() => setQuality({ level: 'low' })}
                 >
                   Low
                 </SmallButton>
-                <SmallButton 
+                <SmallButton
                   isActive={activeQuality === 'medium'}
-                  onClick={() => {
-                    setQuality({ level: 'medium' })
-                  }}
+                  onClick={() => setQuality({ level: 'medium' })}
                 >
                   Medium
                 </SmallButton>
-                <SmallButton 
+                <SmallButton
                   isActive={activeQuality === 'high'}
-                  onClick={() => {
-                    setQuality({ level: 'high' })
-                  }}
+                  onClick={() => setQuality({ level: 'high' })}
                 >
                   High
                 </SmallButton>
@@ -2030,10 +1980,10 @@ export const MoleculeViewer: FC = () => {
             <ControlGroup>
               <Label>Selection Mode</Label>
               <SelectDropdown
-                value={molecule.selectionMode || 'residue'}
+                value={molecule.granularity || 'residue'}
                 onChange={(e) => {
-                  const mode = e.target.value as any
-                  setSelection({ mode })
+                  const mode = e.target.value
+                  setGranularity(mode)
                 }}
               >
                 <option value="atom">Atom/Coarse Element</option>
@@ -2051,13 +2001,13 @@ export const MoleculeViewer: FC = () => {
 
             <ControlGroup>
               <Label>Camera</Label>
-              
+
               <SliderLabel>
                 <span>Projection</span>
                 <span>{cameraMode === 'perspective' ? 'Perspective' : 'Orthographic'}</span>
               </SliderLabel>
               <ButtonGroup>
-                <SmallButton 
+                <SmallButton
                   isActive={cameraMode === 'perspective'}
                   onClick={() => {
                     setCameraMode('perspective')
@@ -2066,7 +2016,7 @@ export const MoleculeViewer: FC = () => {
                 >
                   Perspective
                 </SmallButton>
-                <SmallButton 
+                <SmallButton
                   isActive={cameraMode === 'orthographic'}
                   onClick={() => {
                     setCameraMode('orthographic')
@@ -2076,7 +2026,7 @@ export const MoleculeViewer: FC = () => {
                   Orthographic
                 </SmallButton>
               </ButtonGroup>
-              
+
               <SliderLabel>
                 <span>Axes</span>
                 <ToggleSwitch>
@@ -2099,7 +2049,7 @@ export const MoleculeViewer: FC = () => {
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               {axesEnabled && (
                 <>
                   <SliderLabel>
@@ -2116,21 +2066,21 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const value = parseFloat(e.target.value)
                         setAxesOpacity(value)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             opacity: value
                             // Don't send scale - let it maintain its current value
-                          } 
+                          }
                         })
                       }}
                     />
                     <Rotate
                       onClick={() => {
                         setAxesOpacity(0.51)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             opacity: 0.51
-                          } 
+                          }
                         })
                       }}
                     >
@@ -2139,7 +2089,7 @@ export const MoleculeViewer: FC = () => {
                       </ResetButton>
                     </Rotate>
                   </SliderRow>
-                  
+
                   <SliderLabel>
                     <span>Axes Scale</span>
                     <span>{axesScale.toFixed(1)}</span>
@@ -2154,21 +2104,21 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const value = parseFloat(e.target.value)
                         setAxesScale(value)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             scale: value
                             // Don't send opacity - let it maintain its current value
-                          } 
+                          }
                         })
                       }}
                     />
                     <Rotate
                       onClick={() => {
                         setAxesScale(0.33)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             scale: 0.33
-                          } 
+                          }
                         })
                       }}
                     >
@@ -2177,7 +2127,7 @@ export const MoleculeViewer: FC = () => {
                       </ResetButton>
                     </Rotate>
                   </SliderRow>
-                  
+
                   <SliderLabel>
                     <span>Axes Colors</span>
                   </SliderLabel>
@@ -2188,10 +2138,10 @@ export const MoleculeViewer: FC = () => {
                       value={axesColorX}
                       onChange={(e) => {
                         setAxesColorX(e.target.value)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             colors: { x: e.target.value, y: axesColorY, z: axesColorZ }
-                          } 
+                          }
                         })
                       }}
                     />
@@ -2201,10 +2151,10 @@ export const MoleculeViewer: FC = () => {
                       value={axesColorY}
                       onChange={(e) => {
                         setAxesColorY(e.target.value)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             colors: { x: axesColorX, y: e.target.value, z: axesColorZ }
-                          } 
+                          }
                         })
                       }}
                     />
@@ -2214,10 +2164,10 @@ export const MoleculeViewer: FC = () => {
                       value={axesColorZ}
                       onChange={(e) => {
                         setAxesColorZ(e.target.value)
-                        setCamera({ 
-                          axes: { 
+                        setCamera({
+                          axes: {
                             colors: { x: axesColorX, y: axesColorY, z: e.target.value }
-                          } 
+                          }
                         })
                       }}
                     />
@@ -2227,7 +2177,7 @@ export const MoleculeViewer: FC = () => {
                   </div>
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Stereo</span>
                 <ToggleSwitch>
@@ -2236,19 +2186,19 @@ export const MoleculeViewer: FC = () => {
                     checked={stereoEnabled}
                     onChange={(e) => {
                       setStereoEnabled(e.target.checked)
-                      setCamera({ 
-                        stereo: { 
+                      setCamera({
+                        stereo: {
                           enabled: e.target.checked,
                           eyeSeparation: e.target.checked ? eyeSeparation : undefined,
                           focus: e.target.checked ? stereoFocus : undefined
-                        } 
+                        }
                       })
                     }}
                   />
                   <span></span>
                 </ToggleSwitch>
               </SliderLabel>
-              
+
               {stereoEnabled && (
                 <>
                   <SliderLabel>
@@ -2265,24 +2215,24 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const value = parseFloat(e.target.value)
                         setEyeSeparation(value)
-                        setCamera({ 
-                          stereo: { 
+                        setCamera({
+                          stereo: {
                             enabled: true,
                             eyeSeparation: value,
                             focus: stereoFocus
-                          } 
+                          }
                         })
                       }}
                     />
                     <Rotate
                       onClick={() => {
                         setEyeSeparation(0.064)
-                        setCamera({ 
-                          stereo: { 
+                        setCamera({
+                          stereo: {
                             enabled: true,
                             eyeSeparation: 0.064,
                             focus: stereoFocus
-                          } 
+                          }
                         })
                       }}
                     >
@@ -2291,7 +2241,7 @@ export const MoleculeViewer: FC = () => {
                       </ResetButton>
                     </Rotate>
                   </SliderRow>
-                  
+
                   <SliderLabel>
                     <span>Stereo Focus</span>
                     <span>{stereoFocus.toFixed(1)}</span>
@@ -2306,24 +2256,24 @@ export const MoleculeViewer: FC = () => {
                       onChange={(e) => {
                         const value = parseFloat(e.target.value)
                         setStereoFocus(value)
-                        setCamera({ 
-                          stereo: { 
+                        setCamera({
+                          stereo: {
                             enabled: true,
                             eyeSeparation,
                             focus: value
-                          } 
+                          }
                         })
                       }}
                     />
                     <Rotate
                       onClick={() => {
                         setStereoFocus(10)
-                        setCamera({ 
-                          stereo: { 
+                        setCamera({
+                          stereo: {
                             enabled: true,
                             eyeSeparation,
                             focus: 10
-                          } 
+                          }
                         })
                       }}
                     >
@@ -2334,7 +2284,7 @@ export const MoleculeViewer: FC = () => {
                   </SliderRow>
                 </>
               )}
-              
+
               <SliderLabel>
                 <span>Field of View</span>
                 <span>{fieldOfView}°</span>
@@ -2364,78 +2314,10 @@ export const MoleculeViewer: FC = () => {
                 </Rotate>
               </SliderRow>
             </ControlGroup>
-            
-            <ControlGroup>
-              <Label>Sequence Viewer</Label>
-              <SequenceViewer>
-                {/* Mock sequence data - in real implementation, this would come from the loaded structure */}
-                {mockSequence.map((residue, i) => {
-                  const residueNum = i + 1
-                  const isSelected = selectedResidues.includes(residueNum)
-                  const isHighlighted = highlightedResidues.includes(residueNum)
-                  
-                  return (
-                    <ResidueSpan
-                      key={residueNum}
-                      isSelected={isSelected}
-                      isHighlighted={isHighlighted}
-                      onClick={() => {
-                        let newSelected: number[]
-                        if (isSelected) {
-                          newSelected = selectedResidues.filter(r => r !== residueNum)
-                        } else {
-                          newSelected = [...selectedResidues, residueNum]
-                        }
-                        setSelectedResidues(newSelected)
-                        
-                        // For now, just log the selection - avoid complex selection parsing
-                        console.log('Selected residues:', newSelected)
-                        // TODO: Implement proper residue selection when structure is loaded
-                      }}
-                      onMouseEnter={() => {
-                        setHighlightedResidues([residueNum])
-                      }}
-                      onMouseLeave={() => {
-                        setHighlightedResidues([])
-                      }}
-                      title={`${residue}${residueNum}`}
-                    >
-                      {residue}
-                    </ResidueSpan>
-                  )
-                }).reduce((acc, curr, i) => {
-                  // Add spacing every 10 residues
-                  if (i > 0 && i % 10 === 0) {
-                    return [...acc, ' ', curr]
-                  }
-                  return [...acc, curr]
-                }, [] as React.ReactNode[])}
-              </SequenceViewer>
-              <SequenceInfo>
-                <span>Chain A: 280 residues</span>
-                <span>{selectedResidues.length} selected</span>
-              </SequenceInfo>
-              
-              <ButtonGroup style={{ marginTop: '0.5rem' }}>
-                <SmallButton onClick={() => {
-                  setSelectedResidues([])
-                  console.log('Cleared selection')
-                }}>
-                  Clear Selection
-                </SmallButton>
-                <SmallButton onClick={() => {
-                  // Select all
-                  const allResidues = Array.from({ length: 280 }, (_, i) => i + 1)
-                  setSelectedResidues(allResidues)
-                  console.log('Selected all residues')
-                }}>
-                  Select All
-                </SmallButton>
-              </ButtonGroup>
-            </ControlGroup>
+
           </ControlsPanel>
         )}
       </ViewerContainer>
-    </Container>
+    </Container >
   )
 }

@@ -3,31 +3,29 @@
 export interface LoadConfig {
   // Source (one of these required)
   pdbId?: string
-  url?: string  
+  url?: string
   file?: File
-  
+
   // Format
   format?: 'pdb' | 'cif' | 'mmcif' | 'sdf' | 'mol' | 'mol2'
-  
+
   // Display options
   animate?: 'spin' | 'rock' | 'none'
   camera?: 'perspective' | 'orthographic'
   preset?: 'default' | 'auto' | 'illustrative' | 'publication' | 'performance' | 'cartoon' | 'polymer' | 'ball-and-stick'
   autoZoom?: boolean
   showAxes?: boolean
-  
+
   // Performance 
   quality?: 'low' | 'medium' | 'high'
   asyncLoad?: boolean
-  
+
   // Initial styling
   background?: string | 'white' | 'black' | 'transparent'
   lighting?: 'bright' | 'soft' | 'dramatic' | 'off'
-  protein?: AppearanceSettings
-  ligand?: AppearanceSettings
-  nucleic?: AppearanceSettings
-  water?: AppearanceSettings & { visible?: boolean }
-  ion?: AppearanceSettings
+  
+  // UI options
+  hideNativeControls?: boolean
 }
 
 export interface ScreenshotOptions {
@@ -35,7 +33,7 @@ export interface ScreenshotOptions {
   download?: boolean       // Auto-download file
   filename?: string        // Custom filename
   resolution?: number      // Multiplier (1x, 2x, 4x)
-  format?: 'png' | 'jpeg'  // File format
+  format?: 'png' | 'jpeg' | 'webp'  // File format
   quality?: number         // JPEG quality 0-100
   transparent?: boolean    // Transparent background
   axes?: boolean          // Show coordinate axes
@@ -47,7 +45,7 @@ export interface MoleculeInstance {
   isInitialized: boolean
   selections: string[]  // Array of current selection queries
   selectionMode?: 'atom' | 'residue' | 'chain' | 'entity' | 'model' | 'operator' | 'structure' | 'atom-instance' | 'residue-instance' | 'chain-instance'
-  
+
   // Component visibility state
   componentVisibility?: {
     protein: boolean
@@ -56,10 +54,10 @@ export interface MoleculeInstance {
     water: boolean
     ion: boolean
   }
-  
+
   // Available components in the loaded structure
   availableComponents?: string[]
-  
+
   // Active components with their details
   components?: Array<{
     type: string
@@ -68,7 +66,7 @@ export interface MoleculeInstance {
     isVisible: boolean
     ref: string
   }>
-  
+
   // Current appearance state
   background?: string | 'white' | 'black' | 'transparent'
   lighting?: 'bright' | 'soft' | 'dramatic' | 'off'
@@ -78,14 +76,16 @@ export interface MoleculeInstance {
   water?: AppearanceSettings
   ion?: AppearanceSettings
   quality?: QualitySettings
-  
+
   // Loading
   load: (config: LoadConfig) => Promise<void>
-  
+
   // Actions
   screenshot: (options?: ScreenshotOptions) => Promise<string | void>
+  copyScreenshot: (options?: ScreenshotOptions) => Promise<void>
+  downloadScreenshot: (options?: ScreenshotOptions) => Promise<void>
   fullscreen: () => void  // Toggle fullscreen
-  
+
   // Camera controls
   resetZoom: () => void
   resetCamera: () => void
@@ -93,45 +93,21 @@ export interface MoleculeInstance {
   resetAxes: () => void
   center: () => void
   focus: (selection: string) => void
-  
+
   // Native Molstar features
   plugin?: any  // Direct access to Molstar plugin instance
-  
-  // State management
-  saveState: (name: string) => Promise<void>
-  loadState: (name: string) => Promise<void>
-  clearState: () => void
-  states: string[]  // List of saved state names
-  
-  // Measurements
-  measureDistance: (atom1: string, atom2: string) => void
-  measureAngle: (atom1: string, atom2: string, atom3: string) => void
-  measureDihedral: (atom1: string, atom2: string, atom3: string, atom4: string) => void
-  clearMeasurements: () => void
-  
+  ref?: React.RefObject<HTMLDivElement>  // Container element ref
+
   // Structure tools
-  toggleComponent: (type: 'protein' | 'ligand' | 'nucleic' | 'water' | 'ion') => void
-  hideComponent: (type: 'protein' | 'ligand' | 'nucleic' | 'water' | 'ion') => void
-  showComponent: (type: 'protein' | 'ligand' | 'nucleic' | 'water' | 'ion') => void
-  removeComponent: (type: 'protein' | 'ligand' | 'nucleic' | 'water' | 'ion') => void
-  
-  // Hierarchy
-  getHierarchy: () => any  // Returns structure hierarchy
-  toggleChain: (chainId: string) => void
-  
+  toggleComponent: (ref: string) => Promise<void>
+  removeComponent: (ref: string) => Promise<void>
+
   // Presets
   applyComponentPreset: (preset: string) => Promise<void>
-  
-  // Advanced selection
-  selectByExpression: (expression: string) => void
-  createSelectionSet: (name: string, selection: string) => void
-  applySelectionSet: (name: string) => void
-  deleteSelectionSet: (name: string) => void
-  selectionSets: Map<string, string>
-  
+
   // Component creation
   createComponent: (selection: string, representation: string, label?: string, checkExisting?: boolean) => Promise<void>
-  
+
   // Style presets
   setStylePreset: (preset: 'default' | 'illustrative' | 'publication' | 'performance') => Promise<void>
   setRepresentationPreset: (preset: 'default' | 'cartoon' | 'spacefill' | 'surface') => Promise<void>
@@ -155,27 +131,27 @@ export interface StructureConfig {
   nucleic?: boolean
   water?: boolean
   ion?: boolean
-  
+
   // Show/hide specific chains
   chains?: Record<string, boolean>         // { A: true, B: false }
-  
+
   // Show/hide by residue ranges
   residues?: Record<string, boolean>       // { 'A:1-100': true, 'B:50-150': false }
-  
+
   // Show only around selection
   around?: {
     selection: string
     distance: number
     hideRest?: boolean
   }
-  
+
   // Surface representations
   surface?: {
     protein?: boolean
     cavity?: boolean
     electrostatic?: boolean
   }
-  
+
   // Property-based filtering
   byProperty?: {
     bfactor?: { min: number, max: number }
@@ -213,7 +189,7 @@ export interface CameraConfig {
 export interface QualitySettings {
   level?: 'high' | 'medium' | 'low'        // Overall quality preset
   antialiasing?: boolean                    // MSAA on/off
-  shadows?: { 
+  shadows?: {
     enabled: boolean
     quality: 'low' | 'medium' | 'high'
     steps?: number
@@ -244,7 +220,7 @@ export interface SelectionConfig {
   remove?: string                          // Remove from current selection
   intersect?: string                       // Keep only intersection
   clear?: boolean                          // Clear all selections
-  
+
   // Visual styling for selected elements
   highlight?: {
     color?: string
@@ -252,11 +228,10 @@ export interface SelectionConfig {
     intensity?: number                     // 0-1
     thickness?: number                     // For outline style
   }
-  
+
   // Selection behavior
-  mode?: 'atom' | 'residue' | 'chain' | 'entity' | 'model' | 'operator' | 'structure' | 'atom-instance' | 'residue-instance' | 'chain-instance'     // What granularity to select
   preferAtoms?: boolean                    // Prefer atoms over bonds when clicking
-  
+
   // Focus behavior  
   autoFocus?: boolean                      // Auto-focus camera on selection
   showLabels?: boolean                     // Show residue labels for selection
@@ -269,7 +244,7 @@ export interface AppearanceConfig {
   lighting?: 'bright' | 'soft' | 'dramatic' | 'off'
   shadows?: boolean | { enabled: boolean, quality: 'low' | 'medium' | 'high' }
   fog?: boolean | { enabled: boolean, intensity: number }
-  
+
   // Postprocessing effects
   postprocessing?: {
     lighten?: number      // 0-1
@@ -278,14 +253,14 @@ export interface AppearanceConfig {
     occlusion?: { on: boolean, params?: any }
     shadow?: { on: boolean, params?: any }
   }
-  
+
   // Molecular styling
   protein?: AppearanceSettings
   ligand?: AppearanceSettings
   nucleic?: AppearanceSettings
   water?: AppearanceSettings
   ion?: AppearanceSettings
-  
+
   // Custom selection styling
   selection?: string | {
     query: string
@@ -302,7 +277,7 @@ export interface MoleculeState {
   lighting?: 'bright' | 'soft' | 'dramatic' | 'off'
   shadows?: boolean | { enabled: boolean, quality: 'low' | 'medium' | 'high' }
   fog?: boolean | { enabled: boolean, intensity: number }
-  
+
   // Postprocessing effects
   postprocessing?: {
     lighten?: number      // 0-1
@@ -311,14 +286,14 @@ export interface MoleculeState {
     occlusion?: { on: boolean, params?: any }
     shadow?: { on: boolean, params?: any }
   }
-  
+
   // Molecular styling (built-in categories)
   protein?: AppearanceSettings
-  ligand?: AppearanceSettings  
+  ligand?: AppearanceSettings
   nucleic?: AppearanceSettings
   water?: AppearanceSettings
   ion?: AppearanceSettings
-  
+
   // Custom selection styling
   selection?: string | {
     query: string
@@ -326,16 +301,16 @@ export interface MoleculeState {
     color?: ColorType
     transparency?: number
   }
-  
+
   // Structure visibility
   structure?: StructureConfig
-  
+
   // Camera
   camera?: CameraConfig
-  
+
   // Quality/Performance
   quality?: QualitySettings
-  
+
   // Selection state and styling
   selected?: string[]
   selectionStyle?: {

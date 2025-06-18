@@ -91,7 +91,7 @@ const mockMessages = [
   { id: '4', text: 'The key interactions include several hydrogen bonds and a salt bridge between the inhibitor and the enzyme active site.', isUser: false },
 ]
 
-export function ChatPanel() {
+export function Chat() {
   return (
     <Container>
       <Header>
@@ -108,10 +108,10 @@ export function ChatPanel() {
       </MessagesContainer>
       <InputContainer>
         <InputWrapper>
-          <Input 
-            type="text" 
-            placeholder="Send a message..." 
-            disabled 
+          <Input
+            type="text"
+            placeholder="Send a message..."
+            disabled
           />
           <SendButton disabled>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

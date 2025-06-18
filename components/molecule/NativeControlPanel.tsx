@@ -1,18 +1,535 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 import { capitalize } from 'lodash'
+import { useToggles } from 'toggles'
 import { MoleculeInstance } from '../../useMolstar/types'
-import { FaTrash, FaRuler, FaCube, FaPalette, FaLayerGroup, FaStream, FaEllipsisV, FaTimes } from 'react-icons/fa'
+import { FaTrash, FaCube, FaPalette, FaLayerGroup, FaEllipsisV, FaTimes, FaDna } from 'react-icons/fa'
 import { MdLayers, MdVisibility, MdVisibilityOff } from 'react-icons/md'
 import { BiShapePolygon } from 'react-icons/bi'
 import { getSelectionCategories, MolstarRepresentationTypes } from '../../useMolstar/molstar-selections'
-
+import { IconButtonWithTooltip, TooltipContext } from './IconButtonWithTooltip'
 interface NativeControlPanelProps {
   molecule: MoleculeInstance
   setAppearance?: (config: any) => void
   setStylePreset?: (preset: 'default' | 'illustrative' | 'publication' | 'performance') => void
   setRepresentationPreset?: (preset: 'default' | 'cartoon' | 'spacefill' | 'surface') => void
+}
+
+export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
+  const [expandedSections, setExpandedSections] = useState({
+    structure: true,
+    quickStyles: true,
+    components: true,
+    sequenceViewer: true
+  })
+
+  const [selectedStyle, setSelectedStyle] = useState('default')
+  const [selectedStylePreset, setSelectedStylePreset] = useState('default')
+
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+  const [structureType, setStructureType] = useState('model')
+  const [{ dynamicBonds, addComponentModal, checkExisting }, { toggle }] = useToggles(false)
+
+  // Add component form state
+  const [componentSelection, setComponentSelection] = useState('current-selection')
+  const [componentRepresentation, setComponentRepresentation] = useState('create-later')
+  const [componentLabel, setComponentLabel] = useState('')
+  // const [checkExisting, toggleCheckExisting] = useToggles(false)
+
+  // Sequence viewer state
+  const [selectedResidues, setSelectedResidues] = useState<number[]>([])
+  const [highlightedResidues, setHighlightedResidues] = useState<number[]>([])
+
+  const mockSequence = React.useMemo(() => {
+    const residues = 'ACDEFGHIKLMNPQRSTVWY'
+    return Array.from({ length: 280 }, (_, i) => {
+      return residues[(i * 7 + 3) % residues.length]
+    })
+  }, [])
+
+  const components = molecule.components || []
+
+  const [componentUpdateKey, setComponentUpdateKey] = useState(0)
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
+  }
+
+  return (
+    <TooltipContext.Provider value={{ activeTooltip, setActiveTooltip }}>
+      <Container>
+        {/* Sequence Viewer */}
+        <Section>
+          <SectionTitle onClick={() => toggleSection('sequenceViewer')}>
+            <FaDna />
+            Sequence Viewer
+            <span style={{ marginLeft: 'auto' }}>{expandedSections.sequenceViewer ? '−' : '+'}</span>
+          </SectionTitle>
+          {expandedSections.sequenceViewer && (
+            <>
+              <SequenceViewerContainer>
+                {/* Mock sequence data - in real implementation, this would come from the loaded structure */}
+                {mockSequence.map((residue, i) => {
+                  const residueNum = i + 1
+                  const isSelected = selectedResidues.includes(residueNum)
+                  const isHighlighted = highlightedResidues.includes(residueNum)
+
+                  return (
+                    <ResidueSpan
+                      key={residueNum}
+                      isSelected={isSelected}
+                      isHighlighted={isHighlighted}
+                      onClick={() => {
+                        let newSelected: number[]
+                        if (isSelected) {
+                          newSelected = selectedResidues.filter(r => r !== residueNum)
+                        } else {
+                          newSelected = [...selectedResidues, residueNum]
+                        }
+                        setSelectedResidues(newSelected)
+
+                        // For now, just log the selection - avoid complex selection parsing
+                        console.log('Selected residues:', newSelected)
+                        // TODO: Implement proper residue selection when structure is loaded
+                      }}
+                      onMouseEnter={() => {
+                        setHighlightedResidues([residueNum])
+                      }}
+                      onMouseLeave={() => {
+                        setHighlightedResidues([])
+                      }}
+                      title={`${residue}${residueNum}`}
+                    >
+                      {residue}
+                    </ResidueSpan>
+                  )
+                }).reduce((acc, curr, i) => {
+                  // Add spacing every 10 residues
+                  if (i > 0 && i % 10 === 0) {
+                    return [...acc, ' ', curr]
+                  }
+                  return [...acc, curr]
+                }, [] as React.ReactNode[])}
+              </SequenceViewerContainer>
+              <SequenceInfo>
+                <span>Chain A: 280 residues</span>
+                <span>{selectedResidues.length} selected</span>
+              </SequenceInfo>
+
+              <ButtonGroup style={{ marginTop: '0.5rem' }}>
+                <SmallButton onClick={() => setSelectedResidues([])}>
+                  Clear Selection
+                </SmallButton>
+                <SmallButton onClick={() => {
+                  const allResidues = Array.from({ length: 280 }, (_, i) => i + 1)
+                  setSelectedResidues(allResidues)
+                }}>
+                  Select All
+                </SmallButton>
+              </ButtonGroup>
+            </>
+          )}
+        </Section>
+
+        {/* Quick Styles */}
+        <Section>
+          <SectionTitle onClick={() => toggleSection('quickStyles')}>
+            <FaPalette />
+            Quick Styles
+            <span style={{ marginLeft: 'auto' }}>{expandedSections.quickStyles ? '−' : '+'}</span>
+          </SectionTitle>
+          {expandedSections.quickStyles && (
+            <>
+              <Label>Representation Presets</Label>
+              <ButtonGroup>
+                <Button
+                  onClick={async () => {
+                    setSelectedStyle('default')
+                    await molecule.setRepresentationPreset('default')
+                  }}
+                  style={{
+                    background: selectedStyle === 'default' ? '#e6fffa' : 'white',
+                    borderColor: selectedStyle === 'default' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Default
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSelectedStyle('cartoon')
+                    await molecule.setRepresentationPreset('cartoon')
+                  }}
+                  style={{
+                    background: selectedStyle === 'cartoon' ? '#e6fffa' : 'white',
+                    borderColor: selectedStyle === 'cartoon' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Cartoon
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSelectedStyle('spacefill')
+                    await molecule.setRepresentationPreset('spacefill')
+                  }}
+                  style={{
+                    background: selectedStyle === 'spacefill' ? '#e6fffa' : 'white',
+                    borderColor: selectedStyle === 'spacefill' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Spacefill
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSelectedStyle('surface')
+                    await molecule.setRepresentationPreset('surface')
+                  }}
+                  style={{
+                    background: selectedStyle === 'surface' ? '#e6fffa' : 'white',
+                    borderColor: selectedStyle === 'surface' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Surface
+                </Button>
+              </ButtonGroup>
+
+              <Label style={{ marginTop: '12px' }}>Style Presets</Label>
+              <ButtonGroup>
+                <Button
+                  onClick={async () => {
+                    setSelectedStylePreset('default')
+                    await molecule.setStylePreset('default')
+                  }}
+                  style={{
+                    background: selectedStylePreset === 'default' ? '#e6fffa' : 'white',
+                    borderColor: selectedStylePreset === 'default' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Default
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSelectedStylePreset('illustrative')
+                    await molecule.setStylePreset('illustrative')
+                  }}
+                  style={{
+                    background: selectedStylePreset === 'illustrative' ? '#e6fffa' : 'white',
+                    borderColor: selectedStylePreset === 'illustrative' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Illustrative
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSelectedStylePreset('publication')
+                    await molecule.setStylePreset('publication')
+                  }}
+                  style={{
+                    background: selectedStylePreset === 'publication' ? '#e6fffa' : 'white',
+                    borderColor: selectedStylePreset === 'publication' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Publication
+                </Button>
+                <Button
+                  onClick={async () => {
+                    setSelectedStylePreset('performance')
+                    await molecule.setStylePreset('performance')
+                  }}
+                  style={{
+                    background: selectedStylePreset === 'performance' ? '#e6fffa' : 'white',
+                    borderColor: selectedStylePreset === 'performance' ? '#48bb78' : '#e2e8f0'
+                  }}
+                >
+                  Performance
+                </Button>
+              </ButtonGroup>
+            </>
+          )}
+        </Section>
+
+        {/* Components */}
+        <Section>
+          <SectionTitle onClick={() => toggleSection('components')}>
+            <MdLayers />
+            Components
+            <span style={{ marginLeft: 'auto' }}>{expandedSections.components ? '−' : '+'}</span>
+          </SectionTitle>
+          {expandedSections.components && (
+            <>
+              <div style={{ marginBottom: '12px' }}>
+                <Label>Preset</Label>
+                <Select
+                  defaultValue="auto"
+                  onChange={async (e) => {
+                    const preset = e.target.value
+                    await molecule.applyComponentPreset(preset)
+                  }}
+                >
+                  <option value="empty">Empty</option>
+                  <option value="auto">Automatic</option>
+                  <option value="atomic-detail">Atomic Detail</option>
+                  <option value="polymer-cartoon">Polymer Cartoon</option>
+                  <option value="polymer-and-ligand">Polymer & Ligand</option>
+                  <option value="protein-and-nucleic">Protein & Nucleic</option>
+                  <option value="coarse-surface">Coarse Surface</option>
+                  <option value="illustrative">Illustrative</option>
+                  <option value="molecular-surface">Molecular Surface</option>
+                  <option value="automatic-detail">Automatic Detail</option>
+                </Select>
+              </div>
+              {components.map((component) => (
+                <ComponentRow key={`${component.ref}-${componentUpdateKey}`}>
+                  <ComponentInfo>
+                    <ComponentLabel>{capitalize(component.label)}</ComponentLabel>
+                    <RepresentationType>{component.representation}</RepresentationType>
+                    <VisibilityStatus isVisible={component.isVisible}>
+                      {component.isVisible ? 'visible' : 'hidden'}
+                    </VisibilityStatus>
+                  </ComponentInfo>
+                  <ComponentActions>
+                    <ActionButton
+                      isActive={component.isVisible}
+                      onClick={() => molecule.toggleComponent(component.ref)}
+                      title={component.isVisible ? 'Hide' : 'Show'}
+                    >
+                      {component.isVisible ? <MdVisibility /> : <MdVisibilityOff />}
+                    </ActionButton>
+                    <ActionButton
+                      onClick={() => molecule.removeComponent(component.ref)}
+                      title="Remove"
+                    >
+                      <FaTrash />
+                    </ActionButton>
+                    <ActionButton
+                      onClick={() => console.log('Settings for', component.type)}
+                      title="Settings"
+                    >
+                      <FaEllipsisV />
+                    </ActionButton>
+                  </ComponentActions>
+                </ComponentRow>
+              ))}
+
+              <Button
+                style={{ marginTop: '12px', width: '100%' }}
+                onClick={() => toggle(addComponentModal)}
+              >
+                <FaLayerGroup />
+                Add Component
+              </Button>
+            </>
+          )}
+        </Section>
+
+        <Label>Type</Label>
+        <Select
+          value={structureType}
+          onChange={(e) => {
+            setStructureType(e.target.value)
+            console.log('Type:', e.target.value)
+          }}
+        >
+          <option value="model">Model</option>
+          <option value="assembly">Assembly</option>
+          <option value="symmetry-mates">Symmetry Mates</option>
+          <option value="symmetry-indices">Symmetry (Indices)</option>
+          <option value="symmetry-assembly">Symmetry (Assembly)</option>
+        </Select>
+
+        <SliderLabel style={{ marginTop: '12px' }}>
+          <span>Dynamic Bonds</span>
+          <ToggleSwitch>
+            <input
+              type="checkbox"
+              checked={dynamicBonds.isOn}
+              onChange={() => {
+                toggle(dynamicBonds)
+                console.log('Dynamic bonds:', !dynamicBonds)
+              }}
+            />
+            <span></span>
+          </ToggleSwitch>
+        </SliderLabel>
+
+        {/* Structure */}
+        <Section>
+          <SectionTitle onClick={() => toggleSection('structure')}>
+            <FaCube />
+            Structure
+            <span style={{ marginLeft: 'auto' }}>{expandedSections.structure ? '−' : '+'}</span>
+          </SectionTitle>
+          {expandedSections.structure && (
+            <>
+              <StructureItem>
+                <StructureInfo>
+                  <StructureName>1TQN</StructureName>
+                  <StructureDescription>Crystal Structure of Human...</StructureDescription>
+                </StructureInfo>
+                <PresetButtons>
+                  <IconButtonWithTooltip
+                    id="preset-default"
+                    title="Default (Assembly)"
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText('Default (Assembly)')
+                      console.log('Default')
+                    }}
+                  >
+                    <FaCube />
+                  </IconButtonWithTooltip>
+                  <IconButtonWithTooltip
+                    id="preset-unit-cell"
+                    title="Unit Cell"
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText('Unit Cell')
+                      console.log('Unit Cell')
+                    }}
+                  >
+                    <BiShapePolygon />
+                  </IconButtonWithTooltip>
+                  <IconButtonWithTooltip
+                    id="preset-super-cell"
+                    title="Super Cell"
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText('Super Cell')
+                      console.log('Super Cell')
+                    }}
+                  >
+                    <FaLayerGroup />
+                  </IconButtonWithTooltip>
+                  <IconButtonWithTooltip
+                    id="preset-crystal-contacts"
+                    title="Crystal Contacts"
+                    onClick={() => {
+                      // Copy to clipboard
+                      navigator.clipboard.writeText('Crystal Contacts')
+                      console.log('Crystal Contacts')
+                    }}
+                  >
+                    <MdLayers />
+                  </IconButtonWithTooltip>
+                </PresetButtons>
+              </StructureItem>
+
+
+            </>
+          )}
+        </Section>
+        {/* Add Component Modal */}
+        {addComponentModal.isOpen && createPortal(
+          <Modal isOpen={addComponentModal.isOpen} onClick={() => toggle(addComponentModal)}>
+            <ModalContent onClick={(e) => e.stopPropagation()}>
+              <ModalHeader>
+                <ModalTitle>Add Component</ModalTitle>
+                <CloseButton onClick={() => toggle(addComponentModal)}>
+                  <FaTimes />
+                </CloseButton>
+              </ModalHeader>
+              <ModalBody>
+                <FormSection>
+                  <FormLabel>Selection</FormLabel>
+                  <SelectGroup
+                    value={componentSelection}
+                    onChange={(e) => setComponentSelection(e.target.value)}
+                  >
+                    <option value="all">All</option>
+                    <option value="current-selection">Current Selection</option>
+                    {(() => {
+                      const categories = getSelectionCategories()
+                      return Object.entries(categories).map(([categoryName, options]) => (
+                        <optgroup key={categoryName} label={categoryName}>
+                          {Object.entries(options).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </optgroup>
+                      ))
+                    })()}
+                  </SelectGroup>
+                </FormSection>
+
+                <FormSection>
+                  <FormLabel>Representation</FormLabel>
+                  <Select
+                    value={componentRepresentation}
+                    onChange={(e) => setComponentRepresentation(e.target.value)}
+                  >
+                    <option value="create-later">&lt; Create Later &gt;</option>
+                    {Object.entries(MolstarRepresentationTypes).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </Select>
+                </FormSection>
+
+                <FormSection>
+                  <FormLabel>Label</FormLabel>
+                  <Input
+                    type="text"
+                    placeholder="Component label"
+                    value={componentLabel}
+                    onChange={(e) => setComponentLabel(e.target.value)}
+                  />
+                </FormSection>
+
+                <FormSection>
+                  <FormRow>
+                    <CheckboxLabel>
+                      <input
+                        type="checkbox"
+                        checked={checkExisting.isOn}
+                        onChange={() => toggle(checkExisting)}
+                      />
+                      Check Existing
+                    </CheckboxLabel>
+                  </FormRow>
+                </FormSection>
+
+                <FormSection>
+                  <CreateButton onClick={async () => {
+                    console.log('Creating component:', {
+                      selection: componentSelection,
+                      representation: componentRepresentation,
+                      label: componentLabel,
+                      checkExisting
+                    })
+
+                    // Create the component using the molecule instance
+                    await molecule.createComponent(
+                      componentSelection,
+                      componentRepresentation,
+                      componentLabel || undefined,
+                      checkExisting.isOn
+                    )
+
+                    // Wait a bit for Molstar to update
+                    await new Promise(resolve => setTimeout(resolve, 500))
+
+                    // Log the components after creation
+                    console.log('Components after creation:', molecule.components)
+
+                    // Force a re-render by updating a state variable
+                    setComponentUpdateKey(prev => prev + 1)
+                    toggle(addComponentModal)
+
+                    // Reset form
+                    setComponentSelection('current-selection')
+                    setComponentRepresentation('create-later')
+                    setComponentLabel('')
+                    if (checkExisting.isOn) toggle(checkExisting)
+                  }}>
+                    Create Component
+                  </CreateButton>
+                </FormSection>
+              </ModalBody>
+            </ModalContent>
+          </Modal>,
+          document.body
+        )}
+      </Container>
+    </TooltipContext.Provider>
+  )
 }
 
 const Container = styled.div`
@@ -42,6 +559,8 @@ const SectionTitle = styled.h3`
   
   svg {
     opacity: 0.6;
+    width: 16px;
+    height: 16px;
   }
   
   &:hover {
@@ -115,10 +634,10 @@ const Button = styled.button`
   }
   
   svg {
-    font-size: 14px;
+    width: 16px;
+    height: 16px;
   }
 `
-
 
 const Input = styled.input`
   width: 100%;
@@ -215,7 +734,6 @@ const ActionButton = styled.button<{ isActive?: boolean }>`
   }
 `
 
-
 const StructureItem = styled.div`
   display: flex;
   flex-direction: column;
@@ -253,66 +771,6 @@ const PresetButtons = styled.div`
   margin-top: 4px;
 `
 
-const IconButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 1px solid #e2e8f0;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  
-  svg {
-    width: 16px;
-    height: 16px;
-    color: #718096;
-  }
-  
-  &:hover {
-    background: #f7fafc;
-    border-color: #cbd5e0;
-    
-    svg {
-      color: #4a5568;
-    }
-  }
-`
-
-const Tooltip = styled.div<{ visible: boolean; x: number; y: number }>`
-  position: fixed;
-  top: ${props => props.y}px;
-  left: ${props => props.x}px;
-  transform: translateX(-50%);
-  padding: 6px 10px;
-  background: #2d3748;
-  color: white;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: ${props => props.visible ? 1 : 0};
-  transition: opacity 0.15s;
-  z-index: 999999;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 4px 4px 4px;
-    border-color: transparent transparent #2d3748 transparent;
-  }
-`
 
 const Modal = styled.div<{ isOpen: boolean }>`
   display: ${props => props.isOpen ? 'flex' : 'none'};
@@ -498,25 +956,47 @@ const ToggleSwitch = styled.label`
   }
 `
 
-const TreeView = styled.div`
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
+const SequenceViewerContainer = styled.div`
+  font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
   background: white;
-  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
   margin-top: 8px;
+  min-height: 120px;
+  max-height: 200px;
 `
 
-const TreeItem = styled.div`
-  padding: 4px 8px;
-  font-size: 13px;
-  color: #4a5568;
+const ResidueSpan = styled.span<{ isSelected: boolean; isHighlighted: boolean }>`
   cursor: pointer;
-  user-select: none;
+  padding: 2px 3px;
+  border-radius: 3px;
+  transition: all 0.2s;
+  background-color: ${props =>
+    props.isSelected ? '#3182ce' :
+      props.isHighlighted ? '#e6fffa' :
+        'transparent'
+  };
+  color: ${props => props.isSelected ? 'white' : '#2d3748'};
   
   &:hover {
-    background: #f7fafc;
-    border-radius: 4px;
+    background-color: ${props => props.isSelected ? '#2c5282' : '#bee3f8'};
   }
+`
+
+const SequenceInfo = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #718096;
   
   span {
     display: flex;
@@ -525,750 +1005,19 @@ const TreeItem = styled.div`
   }
 `
 
-const MeasurementList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
-const MeasurementItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 12px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  
-  &:hover {
-    background: #f7fafc;
-  }
-`
-
-const MeasurementInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-`
-
-const MeasurementType = styled.div`
-  font-size: 13px;
-  font-weight: 500;
-  color: #2d3748;
-`
-
-const MeasurementRequirement = styled.div`
-  font-size: 11px;
-  color: #718096;
-`
-
-const AddButton = styled.button`
-  width: 24px;
-  height: 24px;
+const SmallButton = styled.button<{ isActive?: boolean }>`
+  padding: 4px 8px;
+  border: 1px solid ${props => props.isActive ? '#48bb78' : '#e2e8f0'};
+  background: ${props => props.isActive ? '#e6fffa' : 'white'};
   border-radius: 4px;
-  border: 1px solid #e2e8f0;
-  background: white;
-  color: #4a5568;
-  font-size: 18px;
-  font-weight: 300;
+  font-size: 12px;
+  color: ${props => props.isActive ? '#276749' : '#4a5568'};
   cursor: pointer;
   transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
   
   &:hover {
-    background: #4299e1;
-    color: white;
-    border-color: #4299e1;
+    background: ${props => props.isActive ? '#c6f6d5' : '#f7fafc'};
+    border-color: ${props => props.isActive ? '#38a169' : '#cbd5e0'};
   }
 `
 
-// IconButton with tooltip component
-function IconButtonWithTooltip({ 
-  id,
-  title, 
-  onClick, 
-  children 
-}: { 
-  id: string,
-  title: string, 
-  onClick: () => void, 
-  children: React.ReactNode 
-}) {
-  const { activeTooltip, setActiveTooltip } = React.useContext(TooltipContext)
-  const [isHovered, setIsHovered] = useState(false)
-  const [tooltipText, setTooltipText] = useState(title)
-  const [showCopied, setShowCopied] = useState(false)
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 })
-  const buttonRef = useRef<HTMLButtonElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  
-  // Check if this button's tooltip should be visible
-  const isActive = activeTooltip === id
-  const shouldShowTooltip = isActive && (isHovered || showCopied)
-  
-  const updateTooltipPosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setTooltipPosition({
-        x: rect.left + rect.width / 2,
-        y: rect.bottom + 8
-      })
-    }
-  }
-  
-  const handleClick = () => {
-    onClick()
-    setTooltipText('Copied')
-    setShowCopied(true)
-    setActiveTooltip(id)
-    
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-    }
-    
-    // Reset after 2 seconds
-    timeoutRef.current = setTimeout(() => {
-      setTooltipText(title)
-      setShowCopied(false)
-      // Only clear active tooltip if it's still this one
-      setActiveTooltip((current: string | null) => current === id ? null : current)
-    }, 2000)
-  }
-  
-  const handleMouseEnter = () => {
-    setIsHovered(true)
-    setActiveTooltip(id)
-    updateTooltipPosition()
-  }
-  
-  const handleMouseLeave = () => {
-    setIsHovered(false)
-    // Only clear active tooltip if not showing "Copied"
-    if (!showCopied) {
-      setActiveTooltip((current: string | null) => current === id ? null : current)
-    }
-  }
-  
-  // Clear this tooltip if another one becomes active
-  useEffect(() => {
-    if (activeTooltip !== id && activeTooltip !== null) {
-      setIsHovered(false)
-      if (showCopied) {
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current)
-        }
-        setTooltipText(title)
-        setShowCopied(false)
-      }
-    }
-  }, [activeTooltip, id, showCopied, title])
-  
-  // Update position on scroll/resize
-  useEffect(() => {
-    if (shouldShowTooltip) {
-      const handleUpdate = () => updateTooltipPosition()
-      window.addEventListener('scroll', handleUpdate, true)
-      window.addEventListener('resize', handleUpdate)
-      
-      return () => {
-        window.removeEventListener('scroll', handleUpdate, true)
-        window.removeEventListener('resize', handleUpdate)
-      }
-    }
-  }, [shouldShowTooltip])
-  
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [])
-  
-  return (
-    <>
-      <IconButton 
-        ref={buttonRef}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onClick={handleClick}
-      >
-        {children}
-      </IconButton>
-      {shouldShowTooltip && createPortal(
-        <Tooltip 
-          visible={true}
-          x={tooltipPosition.x}
-          y={tooltipPosition.y}
-        >
-          {tooltipText}
-        </Tooltip>,
-        document.body
-      )}
-    </>
-  )
-}
-
-// Create a context to manage tooltip state across all buttons
-const TooltipContext = React.createContext<{
-  activeTooltip: string | null
-  setActiveTooltip: React.Dispatch<React.SetStateAction<string | null>>
-}>({
-  activeTooltip: null,
-  setActiveTooltip: () => {}
-})
-
-export function NativeControlPanel({ molecule }: NativeControlPanelProps) {
-  const [expandedSections, setExpandedSections] = useState({
-    structure: true,
-    measurements: false,
-    quickStyles: false,
-    components: false,
-    volumeStreaming: false
-  })
-  
-  const [selectedStyle, setSelectedStyle] = useState('default')
-  const [selectedStylePreset, setSelectedStylePreset] = useState('default')
-  
-  const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
-  const [structureType, setStructureType] = useState('model')
-  const [dynamicBonds, setDynamicBonds] = useState(false)
-  const [showAddComponentModal, setShowAddComponentModal] = useState(false)
-  
-  // Add component form state
-  const [componentSelection, setComponentSelection] = useState('current-selection')
-  const [componentRepresentation, setComponentRepresentation] = useState('create-later')
-  const [componentLabel, setComponentLabel] = useState('')
-  const [checkExisting, setCheckExisting] = useState(false)
-  
-  // Get components directly from molecule instance
-  const components = molecule.components || []
-  
-  // Force re-render when components change
-  const [componentUpdateKey, setComponentUpdateKey] = useState(0)
-  
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }))
-  }
-  
-  return (
-    <TooltipContext.Provider value={{ activeTooltip, setActiveTooltip }}>
-      <Container>
-        {/* Structure */}
-        <Section>
-          <SectionTitle onClick={() => toggleSection('structure')}>
-            <FaCube />
-            Structure
-            <span style={{ marginLeft: 'auto' }}>{expandedSections.structure ? '−' : '+'}</span>
-          </SectionTitle>
-          {expandedSections.structure && (
-            <>
-              <StructureItem>
-                <StructureInfo>
-                  <StructureName>1TQN</StructureName>
-                  <StructureDescription>Crystal Structure of Human...</StructureDescription>
-                </StructureInfo>
-                <PresetButtons>
-                  <IconButtonWithTooltip 
-                    id="preset-default"
-                    title="Default (Assembly)" 
-                    onClick={() => {
-                      // Copy to clipboard
-                      navigator.clipboard.writeText('Default (Assembly)')
-                      console.log('Default')
-                    }}
-                  >
-                    <FaCube />
-                  </IconButtonWithTooltip>
-                  <IconButtonWithTooltip 
-                    id="preset-unit-cell"
-                    title="Unit Cell" 
-                    onClick={() => {
-                      // Copy to clipboard
-                      navigator.clipboard.writeText('Unit Cell')
-                      console.log('Unit Cell')
-                    }}
-                  >
-                    <BiShapePolygon />
-                  </IconButtonWithTooltip>
-                  <IconButtonWithTooltip 
-                    id="preset-super-cell"
-                    title="Super Cell" 
-                    onClick={() => {
-                      // Copy to clipboard
-                      navigator.clipboard.writeText('Super Cell')
-                      console.log('Super Cell')
-                    }}
-                  >
-                    <FaLayerGroup />
-                  </IconButtonWithTooltip>
-                  <IconButtonWithTooltip 
-                    id="preset-crystal-contacts"
-                    title="Crystal Contacts" 
-                    onClick={() => {
-                      // Copy to clipboard
-                      navigator.clipboard.writeText('Crystal Contacts')
-                      console.log('Crystal Contacts')
-                    }}
-                  >
-                    <MdLayers />
-                  </IconButtonWithTooltip>
-                </PresetButtons>
-              </StructureItem>
-            
-            <Label>Type</Label>
-            <Select 
-              value={structureType} 
-              onChange={(e) => {
-                setStructureType(e.target.value)
-                console.log('Type:', e.target.value)
-              }}
-            >
-              <option value="model">Model</option>
-              <option value="assembly">Assembly</option>
-              <option value="symmetry-mates">Symmetry Mates</option>
-              <option value="symmetry-indices">Symmetry (Indices)</option>
-              <option value="symmetry-assembly">Symmetry (Assembly)</option>
-            </Select>
-            
-            <SliderLabel style={{ marginTop: '12px' }}>
-              <span>Dynamic Bonds</span>
-              <ToggleSwitch>
-                <input
-                  type="checkbox"
-                  checked={dynamicBonds}
-                  onChange={(e) => {
-                    setDynamicBonds(e.target.checked)
-                    console.log('Dynamic bonds:', e.target.checked)
-                  }}
-                />
-                <span></span>
-              </ToggleSwitch>
-            </SliderLabel>
-            
-            <Label style={{ marginTop: '12px' }}>Focus</Label>
-            <TreeView>
-              <TreeItem>
-                <span>▶ Protein</span>
-              </TreeItem>
-              <TreeItem>
-                <span>▶ Ligand</span>
-              </TreeItem>
-              <TreeItem>
-                <span>▶ Water</span>
-              </TreeItem>
-            </TreeView>
-          </>
-        )}
-      </Section>
-      
-      {/* Measurements */}
-      <Section>
-        <SectionTitle onClick={() => toggleSection('measurements')}>
-          <FaRuler />
-          Measurements
-          <span style={{ marginLeft: 'auto' }}>{expandedSections.measurements ? '−' : '+'}</span>
-        </SectionTitle>
-        {expandedSections.measurements && (
-          <>
-            <MeasurementList>
-              <MeasurementItem>
-                <MeasurementInfo>
-                  <MeasurementType>Label</MeasurementType>
-                  <MeasurementRequirement>(1 selection item required)</MeasurementRequirement>
-                </MeasurementInfo>
-                <AddButton onClick={() => console.log('Add label measurement')}>
-                  +
-                </AddButton>
-              </MeasurementItem>
-              
-              <MeasurementItem>
-                <MeasurementInfo>
-                  <MeasurementType>Distance</MeasurementType>
-                  <MeasurementRequirement>(2 selection items required)</MeasurementRequirement>
-                </MeasurementInfo>
-                <AddButton onClick={() => console.log('Add distance measurement')}>
-                  +
-                </AddButton>
-              </MeasurementItem>
-              
-              <MeasurementItem>
-                <MeasurementInfo>
-                  <MeasurementType>Angle</MeasurementType>
-                  <MeasurementRequirement>(3 selection items required)</MeasurementRequirement>
-                </MeasurementInfo>
-                <AddButton onClick={() => console.log('Add angle measurement')}>
-                  +
-                </AddButton>
-              </MeasurementItem>
-              
-              <MeasurementItem>
-                <MeasurementInfo>
-                  <MeasurementType>Dihedral</MeasurementType>
-                  <MeasurementRequirement>(4 selection items required)</MeasurementRequirement>
-                </MeasurementInfo>
-                <AddButton onClick={() => console.log('Add dihedral measurement')}>
-                  +
-                </AddButton>
-              </MeasurementItem>
-              
-              <MeasurementItem>
-                <MeasurementInfo>
-                  <MeasurementType>Orientation</MeasurementType>
-                  <MeasurementRequirement>(selection required)</MeasurementRequirement>
-                </MeasurementInfo>
-                <AddButton onClick={() => console.log('Add orientation measurement')}>
-                  +
-                </AddButton>
-              </MeasurementItem>
-              
-              <MeasurementItem>
-                <MeasurementInfo>
-                  <MeasurementType>Plane</MeasurementType>
-                  <MeasurementRequirement>(selection required)</MeasurementRequirement>
-                </MeasurementInfo>
-                <AddButton onClick={() => console.log('Add plane measurement')}>
-                  +
-                </AddButton>
-              </MeasurementItem>
-            </MeasurementList>
-          </>
-        )}
-      </Section>
-      
-      {/* Quick Styles */}
-      <Section>
-        <SectionTitle onClick={() => toggleSection('quickStyles')}>
-          <FaPalette />
-          Quick Styles
-          <span style={{ marginLeft: 'auto' }}>{expandedSections.quickStyles ? '−' : '+'}</span>
-        </SectionTitle>
-        {expandedSections.quickStyles && (
-          <>
-            <Label>Representation Presets</Label>
-            <ButtonGroup>
-              <Button 
-                onClick={async () => {
-                  setSelectedStyle('default')
-                  await molecule.setRepresentationPreset('default')
-                }}
-                style={{ 
-                  background: selectedStyle === 'default' ? '#e6fffa' : 'white',
-                  borderColor: selectedStyle === 'default' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Default
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setSelectedStyle('cartoon')
-                  await molecule.setRepresentationPreset('cartoon')
-                }}
-                style={{ 
-                  background: selectedStyle === 'cartoon' ? '#e6fffa' : 'white',
-                  borderColor: selectedStyle === 'cartoon' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Cartoon
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setSelectedStyle('spacefill')
-                  await molecule.setRepresentationPreset('spacefill')
-                }}
-                style={{ 
-                  background: selectedStyle === 'spacefill' ? '#e6fffa' : 'white',
-                  borderColor: selectedStyle === 'spacefill' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Spacefill
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setSelectedStyle('surface')
-                  await molecule.setRepresentationPreset('surface')
-                }}
-                style={{ 
-                  background: selectedStyle === 'surface' ? '#e6fffa' : 'white',
-                  borderColor: selectedStyle === 'surface' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Surface
-              </Button>
-            </ButtonGroup>
-            
-            <Label style={{ marginTop: '12px' }}>Style Presets</Label>
-            <ButtonGroup>
-              <Button 
-                onClick={async () => {
-                  setSelectedStylePreset('default')
-                  await molecule.setStylePreset('default')
-                }}
-                style={{ 
-                  background: selectedStylePreset === 'default' ? '#e6fffa' : 'white',
-                  borderColor: selectedStylePreset === 'default' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Default
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setSelectedStylePreset('illustrative')
-                  await molecule.setStylePreset('illustrative')
-                }}
-                style={{ 
-                  background: selectedStylePreset === 'illustrative' ? '#e6fffa' : 'white',
-                  borderColor: selectedStylePreset === 'illustrative' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Illustrative
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setSelectedStylePreset('publication')
-                  await molecule.setStylePreset('publication')
-                }}
-                style={{ 
-                  background: selectedStylePreset === 'publication' ? '#e6fffa' : 'white',
-                  borderColor: selectedStylePreset === 'publication' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Publication
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setSelectedStylePreset('performance')
-                  await molecule.setStylePreset('performance')
-                }}
-                style={{ 
-                  background: selectedStylePreset === 'performance' ? '#e6fffa' : 'white',
-                  borderColor: selectedStylePreset === 'performance' ? '#48bb78' : '#e2e8f0'
-                }}
-              >
-                Performance
-              </Button>
-            </ButtonGroup>
-          </>
-        )}
-      </Section>
-      
-      {/* Components */}
-      <Section>
-        <SectionTitle onClick={() => toggleSection('components')}>
-          <MdLayers />
-          Components
-          <span style={{ marginLeft: 'auto' }}>{expandedSections.components ? '−' : '+'}</span>
-        </SectionTitle>
-        {expandedSections.components && (
-          <>
-            <div style={{ marginBottom: '12px' }}>
-              <Label>Preset</Label>
-              <Select 
-                defaultValue="auto"
-                onChange={async (e) => {
-                  const preset = e.target.value
-                  await molecule.applyComponentPreset(preset)
-                }}
-              >
-                <option value="empty">Empty</option>
-                <option value="auto">Automatic</option>
-                <option value="atomic-detail">Atomic Detail</option>
-                <option value="polymer-cartoon">Polymer Cartoon</option>
-                <option value="polymer-and-ligand">Polymer & Ligand</option>
-                <option value="protein-and-nucleic">Protein & Nucleic</option>
-                <option value="coarse-surface">Coarse Surface</option>
-                <option value="illustrative">Illustrative</option>
-                <option value="molecular-surface">Molecular Surface</option>
-                <option value="automatic-detail">Automatic Detail</option>
-              </Select>
-            </div>
-            {components.map((component) => (
-              <ComponentRow key={`${component.ref}-${componentUpdateKey}`}>
-                <ComponentInfo>
-                  <ComponentLabel>{capitalize(component.label)}</ComponentLabel>
-                  <RepresentationType>{component.representation}</RepresentationType>
-                  <VisibilityStatus isVisible={component.isVisible}>
-                    {component.isVisible ? 'visible' : 'hidden'}
-                  </VisibilityStatus>
-                </ComponentInfo>
-                <ComponentActions>
-                  <ActionButton 
-                    isActive={component.isVisible}
-                    onClick={() => molecule.toggleComponent(component.ref)}
-                    title={component.isVisible ? 'Hide' : 'Show'}
-                  >
-                    {component.isVisible ? <MdVisibility /> : <MdVisibilityOff />}
-                  </ActionButton>
-                  <ActionButton 
-                    onClick={() => molecule.removeComponent(component.ref)}
-                    title="Remove"
-                  >
-                    <FaTrash />
-                  </ActionButton>
-                  <ActionButton 
-                    onClick={() => console.log('Settings for', component.type)}
-                    title="Settings"
-                  >
-                    <FaEllipsisV />
-                  </ActionButton>
-                </ComponentActions>
-              </ComponentRow>
-            ))}
-            
-            <Button 
-              style={{ marginTop: '12px', width: '100%' }}
-              onClick={() => setShowAddComponentModal(true)}
-            >
-              <FaLayerGroup />
-              Add Component
-            </Button>
-          </>
-        )}
-      </Section>
-      
-      {/* Volume Streaming */}
-      <Section>
-        <SectionTitle onClick={() => toggleSection('volumeStreaming')}>
-          <FaStream />
-          Volume Streaming
-          <span style={{ marginLeft: 'auto' }}>{expandedSections.volumeStreaming ? '−' : '+'}</span>
-        </SectionTitle>
-        {expandedSections.volumeStreaming && (
-          <>
-            <Label>Server</Label>
-            <Select>
-              <option value="emdb">EMDB (wwPDB)</option>
-              <option value="custom">Custom Server</option>
-            </Select>
-            
-            <Label style={{ marginTop: '12px' }}>Entry ID</Label>
-            <Input
-              type="text"
-              placeholder="e.g., EMD-1234"
-            />
-            
-            <Button style={{ marginTop: '12px', width: '100%' }}>
-              <FaStream />
-              Stream Volume
-            </Button>
-          </>
-        )}
-      </Section>
-      {/* Add Component Modal */}
-      {showAddComponentModal && createPortal(
-        <Modal isOpen={showAddComponentModal} onClick={() => setShowAddComponentModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
-            <ModalHeader>
-              <ModalTitle>Add Component</ModalTitle>
-              <CloseButton onClick={() => setShowAddComponentModal(false)}>
-                <FaTimes />
-              </CloseButton>
-            </ModalHeader>
-            <ModalBody>
-              <FormSection>
-                <FormLabel>Selection</FormLabel>
-                <SelectGroup 
-                  value={componentSelection}
-                  onChange={(e) => setComponentSelection(e.target.value)}
-                >
-                  <option value="all">All</option>
-                  <option value="current-selection">Current Selection</option>
-                  {(() => {
-                    const categories = getSelectionCategories()
-                    return Object.entries(categories).map(([categoryName, options]) => (
-                      <optgroup key={categoryName} label={categoryName}>
-                        {Object.entries(options).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </optgroup>
-                    ))
-                  })()}
-                </SelectGroup>
-              </FormSection>
-
-              <FormSection>
-                <FormLabel>Representation</FormLabel>
-                <Select 
-                  value={componentRepresentation}
-                  onChange={(e) => setComponentRepresentation(e.target.value)}
-                >
-                  <option value="create-later">&lt; Create Later &gt;</option>
-                  {Object.entries(MolstarRepresentationTypes).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))}
-                </Select>
-              </FormSection>
-
-              <FormSection>
-                <FormLabel>Label</FormLabel>
-                <Input 
-                  type="text"
-                  placeholder="Component label"
-                  value={componentLabel}
-                  onChange={(e) => setComponentLabel(e.target.value)}
-                />
-              </FormSection>
-
-              <FormSection>
-                <FormRow>
-                  <CheckboxLabel>
-                    <input 
-                      type="checkbox"
-                      checked={checkExisting}
-                      onChange={(e) => setCheckExisting(e.target.checked)}
-                    />
-                    Check Existing
-                  </CheckboxLabel>
-                </FormRow>
-              </FormSection>
-
-              <FormSection>
-                <CreateButton onClick={async () => {
-                  console.log('Creating component:', {
-                    selection: componentSelection,
-                    representation: componentRepresentation,
-                    label: componentLabel,
-                    checkExisting
-                  })
-                  
-                  // Create the component using the molecule instance
-                  await molecule.createComponent(
-                    componentSelection,
-                    componentRepresentation,
-                    componentLabel || undefined,
-                    checkExisting
-                  )
-                  
-                  // Wait a bit for Molstar to update
-                  await new Promise(resolve => setTimeout(resolve, 500))
-                  
-                  // Log the components after creation
-                  console.log('Components after creation:', molecule.components)
-                  
-                  // Force a re-render by updating a state variable
-                  setComponentUpdateKey(prev => prev + 1)
-                  setShowAddComponentModal(false)
-                  
-                  // Reset form
-                  setComponentSelection('current-selection')
-                  setComponentRepresentation('create-later')
-                  setComponentLabel('')
-                  setCheckExisting(false)
-                }}>
-                  Create Component
-                </CreateButton>
-              </FormSection>
-            </ModalBody>
-          </ModalContent>
-        </Modal>,
-        document.body
-      )}
-    </Container>
-    </TooltipContext.Provider>
-  )
-}
