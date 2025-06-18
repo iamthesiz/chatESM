@@ -1,4 +1,4 @@
-import { LoadConfig } from "../useMolstar"
+import { LoadConfig } from "../hooks/types"
 
 export const sleep = (ms = 0) => new Promise(r => setTimeout(r, ms))
 

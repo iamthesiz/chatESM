@@ -1,7 +1,7 @@
 import styled from '@emotion/styled'
 import { keyframes } from '@emotion/react'
 import { useEffect, useState, useRef, useMemo } from 'react'
-import { useMolstar } from '../../useMolstar'
+import { useMolstar } from '../../hooks/useMolstar'
 import type { FC } from 'react'
 import { NativeControlPanel } from './NativeControlPanel'
 import { FiTool, FiRefreshCw, FiX, FiMenu } from 'react-icons/fi'

@@ -23,6 +23,10 @@ export interface LoadConfig {
   // Initial styling
   background?: string | 'white' | 'black' | 'transparent'
   lighting?: 'bright' | 'soft' | 'dramatic' | 'off'
+  protein?: {
+    style?: string
+    color?: string
+  }
   
   // UI options
   hideNativeControls?: boolean
@@ -44,38 +48,21 @@ export interface MoleculeInstance {
   // State
   isInitialized: boolean
   selections: string[]  // Array of current selection queries
-  selectionMode?: 'atom' | 'residue' | 'chain' | 'entity' | 'model' | 'operator' | 'structure' | 'atom-instance' | 'residue-instance' | 'chain-instance'
+  granularity?: any  // Current selection granularity
 
   // Component visibility state
-  componentVisibility?: {
-    protein: boolean
-    ligand: boolean
-    nucleic: boolean
-    water: boolean
-    ion: boolean
-  }
+  componentVisibility?: any
 
   // Available components in the loaded structure
   availableComponents?: string[]
 
   // Active components with their details
-  components?: Array<{
-    type: string
-    label: string
-    representation: string
-    isVisible: boolean
-    ref: string
-  }>
+  components?: any
 
   // Current appearance state
-  background?: string | 'white' | 'black' | 'transparent'
-  lighting?: 'bright' | 'soft' | 'dramatic' | 'off'
-  protein?: AppearanceSettings
-  ligand?: AppearanceSettings
-  nucleic?: AppearanceSettings
-  water?: AppearanceSettings
-  ion?: AppearanceSettings
-  quality?: QualitySettings
+  background?: string
+  lighting?: string
+  quality?: { level: 'high' | 'medium' | 'low' }
 
   // Loading
   load: (config: LoadConfig) => Promise<void>
@@ -95,7 +82,7 @@ export interface MoleculeInstance {
   focus: (selection: string) => void
 
   // Native Molstar features
-  plugin?: any  // Direct access to Molstar plugin instance
+  molstar?: any  // Direct access to Molstar plugin instance
   ref?: React.RefObject<HTMLDivElement>  // Container element ref
 
   // Structure tools
@@ -339,7 +326,18 @@ export interface UseMolstarReturn {
     setCamera: SetCamera
     setQuality: SetQuality
     setSelection: SetSelection
-    setStructure: SetStructure
+    setGranularity?: (mode: string) => void
+    setStylePreset?: (preset: 'default' | 'illustrative' | 'publication' | 'performance') => Promise<void>
+    setRepresentationPreset?: (preset: 'default' | 'cartoon' | 'spacefill' | 'surface') => Promise<void>
+    setRenderer?: (renderer: any, redraw?: boolean) => void
+    setTrackball?: (config: any, redraw?: boolean) => void
+    setShadow?: (shadow: { on: boolean, params?: any }, redraw?: boolean) => void
+    setFog?: (fog: boolean | { enabled: boolean, intensity?: number }) => void
+    setBackground?: (background: string, lighten?: number, darken?: number) => void
+    setIllumination?: (lighting: string, lighten?: number, darken?: number) => void
+    setOutline?: (outline: { on: boolean, params?: any }) => void
+    setOcclusion?: (occlusion: boolean | OcclusionSettings) => void
+    setStructure?: SetStructure
   }
 }
 

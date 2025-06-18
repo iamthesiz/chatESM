@@ -45,7 +45,7 @@ import {
   lightingPresets,
   extractRepresentationType,
   determineComponentType
-} from './selections'
+} from '../utils/molstar-selections'
 import { useIdp } from './useIdp'
 import { adjustColorBrightness, copyImage, downloadImage, getStructureSource, hexToRgb, hideNativeControlsStyle, sleep } from '../utils'
 
@@ -900,7 +900,6 @@ export function useMolstar(providedId?: string): [MoleculeInstance, UseMolstarRe
     setSelections(newSelections)
 
     if (molstar.current) {
-      // Apply selections
       molstar.current.managers.structure.selection.clear()
 
       newSelections.forEach(sel => {
@@ -1099,11 +1098,6 @@ export function useMolstar(providedId?: string): [MoleculeInstance, UseMolstarRe
     if (structures.length > 0) {
       await plugin.managers.structure.component.add(params, structures)
       await sleep(500)
-
-      // Hide native controls if requested
-      if (config.hideNativeControls !== false) {
-        await hideAllNativeControls(plugin)
-      }
       rerender()
     }
   }
@@ -1120,7 +1114,7 @@ export function useMolstar(providedId?: string): [MoleculeInstance, UseMolstarRe
       const bgColor = molstar.current.canvas3d.props.renderer?.backgroundColor ?? 0xffffff
       return BACKGROUND_COLOR_MAP[bgColor] || '#' + bgColor.toString(16).padStart(6, '0')
     },
-    get lighting() {
+    get lighting(): string {
       if (!molstar.current?.canvas3d) return 'soft'
       const { lightIntensity = 0.6, ambientIntensity = 0.6 } = molstar.current.canvas3d.props.illumination || {}
 
@@ -1137,10 +1131,10 @@ export function useMolstar(providedId?: string): [MoleculeInstance, UseMolstarRe
       )?.name || 'soft'
     },
     get quality() {
-      if (!molstar.current?.canvas3d) return { level: 'medium' }
+      if (!molstar.current?.canvas3d) return { level: 'medium' as 'medium' }
       const { mode = 'on', sampleLevel = 2 } = molstar.current.canvas3d.props.multiSample || {}
 
-      const level = mode === 'off' ? 'low' : sampleLevel >= 4 ? 'high' : 'medium'
+      const level: 'high' | 'medium' | 'low' = mode === 'off' ? 'low' : sampleLevel >= 4 ? 'high' : 'medium'
       return { level }
     },
     load,
@@ -1172,7 +1166,15 @@ export function useMolstar(providedId?: string): [MoleculeInstance, UseMolstarRe
     setSelection,
     setGranularity,
     setStylePreset,
-    setRepresentationPreset
+    setRepresentationPreset,
+    setRenderer,
+    setTrackball,
+    setShadow,
+    setFog,
+    setBackground,
+    setIllumination,
+    setOutline,
+    setOcclusion,
   }), [])
 
   return [molecule, setters]

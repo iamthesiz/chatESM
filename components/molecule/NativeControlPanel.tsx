@@ -3,11 +3,11 @@ import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
 import { capitalize } from 'lodash'
 import { useToggles } from 'toggles'
-import { MoleculeInstance } from '../../useMolstar/types'
+import { MoleculeInstance } from '../../hooks/types'
 import { FaTrash, FaCube, FaPalette, FaLayerGroup, FaEllipsisV, FaTimes, FaDna } from 'react-icons/fa'
 import { MdLayers, MdVisibility, MdVisibilityOff } from 'react-icons/md'
 import { BiShapePolygon } from 'react-icons/bi'
-import { getSelectionCategories, MolstarRepresentationTypes } from '../../useMolstar/molstar-selections'
+import { getSelectionCategories, MolstarRepresentationTypes } from '../../utils/molstar-selections'
 import { IconButtonWithTooltip, TooltipContext } from './IconButtonWithTooltip'
 interface NativeControlPanelProps {
   molecule: MoleculeInstance
