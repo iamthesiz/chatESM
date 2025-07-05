@@ -7,6 +7,7 @@ import { Global } from "@emotion/react";
 
 const cache = createCache({ key: "next" });
 
+// This is what make NextJS -> CSR 🧩
 const Hydrated = ({ children }) => {
   const [hydration, setHydration] = useState(false);
 
