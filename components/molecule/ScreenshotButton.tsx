@@ -14,10 +14,9 @@ interface ScreenshotButtonProps {
 export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
   const [molecule] = useMolecule(id)
   const [axes, setAxes] = useAxes(id)
-  const [{ dropdown, transparent }, { toggle, close }] = useToggles(false, false)
+  const [{ dropdown, transparent, copied }, { toggle, close }] = useToggles(false, false, false)
   const [format, setFormat] = useState<'png' | 'jpeg' | 'webp'>('png')
   const [preview, setPreview] = useState<string | null>(null)
-  const [copyButtonText, setCopyButtonText] = useState('Copy')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Click outside handler
@@ -69,14 +68,14 @@ export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
 
   const handleCopy = async () => {
     try {
-      setCopyButtonText('Copied!')
+      toggle(copied)
       await molecule.copyScreenshot({
         transparent: transparent.isOn,
         format,
         axes: axes.visible
       })
       await sleep(1500)
-      setCopyButtonText('Copy')
+      toggle(copied)
     } catch (err) {
       console.error('Failed to copy screenshot:', err)
     }
@@ -145,7 +144,7 @@ export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
 
             <Row>
               <ActionButton onClick={handleCopy}>
-                {copyButtonText}
+                {copied.isOn ? 'Copied!' : 'Copy'}
               </ActionButton>
 
               <ActionButton onClick={handleDownload}>

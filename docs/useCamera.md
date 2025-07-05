@@ -1,8 +1,191 @@
-# Camera System Components
+# useCamera
+
+Hook for controlling the Molstar camera including position, animation, and viewport settings.
+
+## Usage
+
+```typescript
+import { useCamera } from '../hooks/useCamera'
+
+function CameraControls() {
+  const [camera, setCamera] = useCamera('viewer-1')
+  
+  // Animate camera
+  const handleSpin = () => {
+    setCamera({
+      animation: {
+        type: 'spin',
+        speed: 1
+      }
+    })
+  }
+  
+  // Reset view
+  const handleReset = () => {
+    camera.reset({ durationMs: 500 })
+  }
+  
+  return (
+    <div>
+      <button onClick={handleSpin}>Spin</button>
+      <button onClick={handleReset}>Reset</button>
+    </div>
+  )
+}
+```
+
+## API
+
+### Return Value
+
+Returns a tuple: `[camera, setCamera]`
+
+#### camera object
+
+- `position: Vec3` - Camera position
+- `target: Vec3` - Camera target/focus point
+- `up: Vec3` - Camera up vector
+- `zoom: number` - Zoom level
+- `fov: number` - Field of view
+- `near: number` - Near clipping plane
+- `far: number` - Far clipping plane
+- `animation: AnimationState` - Current animation state
+- `reset(options?)` - Reset camera to fit structure
+- `orientAxes(options?)` - Orient to axes view
+- `focus(center, radius, duration?)` - Focus on specific region
+- `set(options)` - Set camera state directly
+
+#### setCamera function
+
+Updates camera configuration:
+
+```typescript
+setCamera({
+  position?: Vec3
+  target?: Vec3
+  zoom?: number
+  fov?: number
+  animation?: {
+    type: 'off' | 'spin' | 'rock'
+    speed?: number
+    angle?: number // for rock animation
+  }
+  fog?: {
+    enabled: boolean
+    intensity?: number
+  }
+  clip?: {
+    near?: number
+    far?: number
+  }
+  mode?: 'perspective' | 'orthographic'
+})
+```
+
+## Examples
+
+### Camera Animation
+
+```typescript
+const [camera, setCamera] = useCamera('mol-1')
+
+// Start spinning
+setCamera({
+  animation: {
+    type: 'spin',
+    speed: 0.5
+  }
+})
+
+// Rock back and forth
+setCamera({
+  animation: {
+    type: 'rock',
+    speed: 1,
+    angle: 15
+  }
+})
+
+// Stop animation
+setCamera({ animation: { type: 'off' } })
+```
+
+### Camera Positioning
+
+```typescript
+// Set specific position
+setCamera({
+  position: [50, 50, 50],
+  target: [0, 0, 0],
+  zoom: 100
+})
+
+// Reset to fit structure
+camera.reset({ durationMs: 1000 })
+
+// Focus on region
+camera.focus([10, 10, 10], 20, 500)
+```
+
+### Fog Effect
+
+```typescript
+// Enable fog
+setCamera({
+  fog: {
+    enabled: true,
+    intensity: 50
+  }
+})
+
+// Disable fog
+setCamera({ fog: { enabled: false } })
+```
+
+### Clipping Planes
+
+```typescript
+// Adjust clipping
+setCamera({
+  clip: {
+    near: 0.1,
+    far: 1000
+  }
+})
+```
+
+### Camera Modes
+
+```typescript
+// Switch to orthographic
+setCamera({ mode: 'orthographic' })
+
+// Back to perspective
+setCamera({ mode: 'perspective' })
+```
+
+## Animation Types
+
+- `off` - No animation
+- `spin` - Continuous rotation around Y axis
+- `rock` - Rock back and forth
+
+## Notes
+
+- Camera state is preserved across component re-renders
+- Animation continues until explicitly stopped
+- Reset automatically calculates optimal view for current structure
+- Fog intensity ranges from 0-100
+
+---
+
+# Ideas
+
+## Camera System Components
 
 Based on exploration of the Molstar source code, here's what's included in the camera system:
 
-## Important: Two Camera Properties in Molstar
+### Important: Two Camera Properties in Molstar
 
 There are two distinct camera-related properties in Molstar:
 
@@ -18,48 +201,48 @@ There are two distinct camera-related properties in Molstar:
    - Used with `canvas3d.setProps()` to update camera settings
    - Part of the canvas3d props system
 
-## Camera System Components
+### Camera System Components
 
-### 1. **Core Camera Properties** (Camera State/Snapshot)
-- `mode`: 'perspective' | 'orthographic'
-- `fov`: Field of view (for perspective mode)
-- `position`: Camera position (Vec3)
-- `up`: Up vector (Vec3)
-- `target`: Look-at target (Vec3)
-- `radius`: Scene bounding sphere radius
-- `radiusMax`: Maximum radius
-- `zoom`: Zoom level
+1. **Core Camera Properties** (Camera State/Snapshot)
+   - `mode`: 'perspective' | 'orthographic'
+   - `fov`: Field of view (for perspective mode)
+   - `position`: Camera position (Vec3)
+   - `up`: Up vector (Vec3)
+   - `target`: Look-at target (Vec3)
+   - `radius`: Scene bounding sphere radius
+   - `radiusMax`: Maximum radius
+   - `zoom`: Zoom level
 
-### 2. **Camera Clipping** (`cameraClipping`)
-- `radius`: Clipping radius (0-99, percentage of scene to show)
-- `far`: Enable far plane clipping (boolean)
-- `minNear`: Minimum near clipping distance
+2. **Camera Clipping** (`cameraClipping`)
+   - `radius`: Clipping radius (0-99, percentage of scene to show)
+   - `far`: Enable far plane clipping (boolean)
+   - `minNear`: Minimum near clipping distance
 
-### 3. **Camera Fog** (`cameraFog`)
-- `intensity`: Fog intensity
-- `enabled`: On/off state
+3. **Camera Fog** (`cameraFog`)
+   - `intensity`: Fog intensity
+   - `enabled`: On/off state
 
-### 4. **Camera Helper** (Visual aids)
-- `axes`: The axes helper we just created `useAxes` for
-- Other potential helpers (grid, scale line, etc.)
+4. **Camera Helper** (Visual aids)
+   - `axes`: The axes helper we just created `useAxes` for
+   - Other potential helpers (grid, scale line, etc.)
 
-### 5. **Stereo Settings** (`stereo`)
-- `enabled`: On/off
-- `eyeSeparation`: Distance between eyes
-- `focus`: Stereo focus distance
+5. **Stereo Settings** (`stereo`)
+   - `enabled`: On/off
+   - `eyeSeparation`: Distance between eyes
+   - `focus`: Stereo focus distance
 
-### 6. **Viewport**
-- Viewport dimensions and offsets
-- Canvas size vs actual render size
-- Multi-window support
+6. **Viewport**
+   - Viewport dimensions and offsets
+   - Canvas size vs actual render size
+   - Multi-window support
 
-### 7. **Camera Controls/Animation**
-- Spin animation
-- Rock animation
-- Transition management (smooth camera movements)
-- Reset behaviors
+7. **Camera Controls/Animation**
+   - Spin animation
+   - Rock animation
+   - Transition management (smooth camera movements)
+   - Reset behaviors
 
-## Proposed Hook Architecture
+### Proposed Hook Architecture
 
 Here's how we could break these into separate hooks:
 
@@ -84,40 +267,7 @@ useCameraAnimation(id) // spin, rock, transitions
 useViewport(id) // viewport dimensions, offsets
 ```
 
-## Implementation Priority
-
-The most useful hooks to implement after axes might be:
-1. `useCamera` - Core position/orientation control
-2. `useCameraClipping` - Control clipping planes for cross-sections
-3. `useCameraFog` - Fog effects for depth perception
-4. `useCameraAnimation` - Built-in animations (spin, rock)
-
-## Example Usage
-
-```typescript
-// Core camera control
-const [camera, setCamera] = useCamera(id)
-// camera = { position, target, up, mode, fov, zoom }
-setCamera({ mode: 'orthographic' })
-setCamera({ position: [10, 10, 10] })
-
-// Clipping planes
-const [clipping, setClipping] = useCameraClipping(id)
-// clipping = { radius, far, minNear }
-setClipping({ radius: 50 }) // Show only 50% of scene
-
-// Fog
-const [fog, setFog] = useCameraFog(id)
-// fog = { enabled, intensity }
-setFog({ enabled: true, intensity: 30 })
-
-// Animation
-const [animation, setAnimation] = useCameraAnimation(id)
-// animation = { type: 'off' | 'spin' | 'rock', speed }
-setAnimation({ type: 'spin', speed: 1 })
-```
-
-## Alternative: Single `useCamera` Hook
+### Alternative: Single `useCamera` Hook
 
 Instead of multiple hooks, all camera functionality could be consolidated into a single `useCamera` hook:
 
@@ -152,27 +302,7 @@ camera = {
     visible: false,
     opacity: 0.51,
     scale: 0.33,
-    location: 'bottom-left',
-    locationOffsetX: 0,
-    locationOffsetY: 0,
-    radiusScale: 0.075,
-    showLabels: false,
-    showPlanes: true,
-    x: '#ff0000',
-    y: '#008000',
-    z: '#0000ff',
-    origin: '#808080',
-    planeXY: '#808080',
-    planeXZ: '#808080',
-    planeYZ: '#808080',
-    labelX: 'X',
-    labelY: 'Y',
-    labelZ: 'Z',
-    labelColorX: '#808080',
-    labelColorY: '#808080',
-    labelColorZ: '#808080',
-    labelOpacity: 1,
-    labelScale: 0.25
+    // ... all axes properties
   },
   
   // Stereo
@@ -196,46 +326,6 @@ camera = {
     offsetY: 0
   }
 }
-
-// Usage examples:
-
-// Update single property
-setCamera({ mode: 'orthographic' })
-setCamera({ position: [10, 10, 10] })
-setCamera({ fov: 60 })
-
-// Update nested properties
-setCamera({ 
-  clipping: { radius: 50 } 
-})
-
-setCamera({ 
-  fog: { enabled: true, intensity: 30 } 
-})
-
-setCamera({ 
-  axes: { visible: true, scale: 0.5 } 
-})
-
-setCamera({
-  animation: { type: 'spin', speed: 2 }
-})
-
-// Update multiple properties at once
-setCamera({
-  mode: 'perspective',
-  position: [20, 20, 20],
-  target: [0, 0, 0],
-  clipping: { radius: 75 },
-  fog: { enabled: true },
-  axes: { visible: true }
-})
-
-// Function updater form
-setCamera(prev => ({
-  ...prev,
-  axes: { ...prev.axes, visible: !prev.axes.visible }
-}))
 ```
 
 ### Pros of Single Hook:
@@ -250,7 +340,7 @@ setCamera(prev => ({
 - Might re-render more components than necessary
 - Harder to tree-shake unused features
 
-## Molstar Source References
+### Molstar Source References
 
 - Camera core: `mol-canvas3d/camera.d.ts`
 - Camera helper: `mol-canvas3d/helper/camera-helper.d.ts`
