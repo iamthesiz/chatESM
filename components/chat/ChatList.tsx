@@ -3,6 +3,7 @@ import styled from '@emotion/styled'
 import { useState } from 'react'
 import * as Icons from 'react-icons/bi'
 import * as Icons2 from 'react-icons/hi2'
+import { useVerbs } from 'toggles'
 
 const BiSidebar = Icons.BiSidebar as any
 const HiOutlinePencilSquare = Icons2.HiOutlinePencilSquare as any
@@ -20,16 +21,17 @@ const mockChats: Chat[] = [
 ]
 
 interface ChatListProps {
-  onToggleSidebar?: () => void
+  sidebar?: any
 }
 
-export function ChatList({ onToggleSidebar }: ChatListProps) {
+export function ChatList({ sidebar }: ChatListProps) {
+  const { toggle } = useVerbs()
   const [selectedChatId, setSelectedChatId] = useState<string>('1')
 
   return (
     <Container>
       <Header>
-        <IconButton onClick={onToggleSidebar} title="Toggle sidebar">
+        <IconButton onClick={() => toggle(sidebar)} title="Toggle sidebar">
           <BiSidebar />
         </IconButton>
         <IconButton title="New chat">

@@ -20,7 +20,7 @@ export default function Home() {
             <BiSidebar />
           </SidebarToggle>
           <ChatListPanel isOpen={!sidebar.isOpen}>
-            <ChatList onToggleSidebar={() => toggle(sidebar)} />
+            <ChatList sidebar={sidebar} />
           </ChatListPanel>
           <ChatPanel hasSidebar={sidebar.isOpen}>
             <Chat />
