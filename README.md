@@ -26,7 +26,7 @@ function MoleculeViewer() {
 ## 📚 Available Hooks
 
 <details>
-<summary><h3>🎯 useMolstar</h3> <i>Core hook for managing Molstar instances</i></summary>
+<summary><b>🎯 useMolstar</b> - Core hook for managing Molstar instances</summary>
 
 The foundation hook that creates and manages Molstar viewer instances. Provides global state management allowing any component to access the same Molstar instance by ID.
 
@@ -45,7 +45,7 @@ const molstar = useMolstar('viewer-1')
 </details>
 
 <details>
-<summary><h3>🧬 useMolecule</h3> <i>High-level molecular visualization</i></summary>
+<summary><b>🧬 useMolecule</b> - High-level molecular visualization</summary>
 
 Simplified API for loading and controlling molecular structures. Handles PDB IDs, URLs, and direct data loading with automatic format detection.
 
@@ -66,7 +66,7 @@ await molecule.screenshot({ download: true })
 </details>
 
 <details>
-<summary><h3>📷 useCamera</h3> <i>Camera position and animation control</i></summary>
+<summary><b>📷 useCamera</b> - Camera position and animation control</summary>
 
 Control camera position, rotation, zoom, and create smooth camera animations. Perfect for creating cinematic molecular tours.
 
@@ -89,7 +89,7 @@ setCamera({
 </details>
 
 <details>
-<summary><h3>📸 useScreenshot</h3> <i>Capture and export visualizations</i></summary>
+<summary><b>📸 useScreenshot</b> - Capture and export visualizations</summary>
 
 Take screenshots of your molecular visualizations with options for transparency, resolution, and format.
 
@@ -111,7 +111,7 @@ const imageUrl = await takeScreenshot({
 </details>
 
 <details>
-<summary><h3>🧩 useComponents</h3> <i>Molecular component management</i></summary>
+<summary><b>🧩 useComponents</b> - Molecular component management</summary>
 
 Control visibility and styling of molecular components like chains, ligands, water molecules, and more.
 
@@ -131,7 +131,7 @@ setComponents({ water: { visible: false } })
 </details>
 
 <details>
-<summary><h3>📝 useSequence</h3> <i>Sequence data and residue selection</i></summary>
+<summary><b>📝 useSequence</b> - Sequence data and residue selection</summary>
 
 Access sequence information and create selections based on sequence positions. Integrates with sequence viewer components.
 
@@ -151,7 +151,7 @@ sequence.selectResidues(10, 20)
 </details>
 
 <details>
-<summary><h3>📐 useAxes</h3> <i>3D orientation helper</i></summary>
+<summary><b>📐 useAxes</b> - 3D orientation helper</summary>
 
 Display and control 3D axes helper for spatial orientation. Useful for educational and presentation purposes.
 
@@ -170,7 +170,7 @@ setAxes({ visible: true, size: 0.5 })
 </details>
 
 <details>
-<summary><h3>🎨 useBackground</h3> <i>Background color control</i></summary>
+<summary><b>🎨 useBackground</b> - Background color control</summary>
 
 Simple hook for changing the viewer background color. Supports any CSS color value.
 
@@ -189,7 +189,7 @@ setBackground('#1a1a1a') // Dark theme
 </details>
 
 <details>
-<summary><h3>🌫️ useFog</h3> <i>Depth-based fog effects</i></summary>
+<summary><b>🌫️ useFog</b> - Depth-based fog effects</summary>
 
 Add atmospheric fog effects to enhance depth perception in complex molecular structures.
 
@@ -208,7 +208,7 @@ setFog({ enabled: true, intensity: 50 })
 </details>
 
 <details>
-<summary><h3>🥽 useStereo</h3> <i>Stereoscopic 3D rendering</i></summary>
+<summary><b>🥽 useStereo</b> - Stereoscopic 3D rendering</summary>
 
 Enable stereoscopic rendering for 3D viewing with VR headsets, 3D monitors, or anaglyph glasses.
 
@@ -227,7 +227,7 @@ setStereo({ on: true, eyeSeparation: 0.064 })
 </details>
 
 <details>
-<summary><h3>🖼️ useViewport</h3> <i>Viewport dimensions and pixel ratio</i></summary>
+<summary><b>🖼️ useViewport</b> - Viewport dimensions and pixel ratio</summary>
 
 Manage viewport dimensions, pixel ratio for HD rendering, and viewport modes.
 
@@ -246,7 +246,7 @@ setViewport({ pixelRatio: 2 }) // Enable HD rendering
 </details>
 
 <details>
-<summary><h3>🔗 useEvent</h3> <i>Cross-component DOM references</i></summary>
+<summary><b>🔗 useEvent</b> - Cross-component DOM references</summary>
 
 Share DOM element references across multiple components using an event-based system.
 
