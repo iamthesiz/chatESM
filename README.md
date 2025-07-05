@@ -41,7 +41,7 @@ const molstar = useMolstar('viewer-1')
 - Direct access to Molstar plugin API
 - TypeScript support with full type safety
 
-[📖 Full Documentation](./docs/useMolstar.md)
+[📖 Full Documentation](docs/useMolstar.md)
 </details>
 
 <details>
@@ -62,7 +62,7 @@ await molecule.screenshot({ download: true })
 - Screenshot and export functionality
 - Simplified component management
 
-[📖 Full Documentation](./docs/useMolecule.md)
+[📖 Full Documentation](docs/useMolecule.md)
 </details>
 
 <details>
@@ -85,7 +85,7 @@ setCamera({
 - Orthographic/perspective projection
 - Camera state snapshots
 
-[📖 Full Documentation](./docs/useCamera.md)
+[📖 Full Documentation](docs/useCamera.md)
 </details>
 
 <details>
@@ -107,7 +107,7 @@ const imageUrl = await takeScreenshot({
 - High-resolution capture
 - Clipboard integration
 
-[📖 Full Documentation](./docs/useScreenshot.md)
+[📖 Full Documentation](docs/useScreenshot.md)
 </details>
 
 <details>
@@ -127,7 +127,7 @@ setComponents({ water: { visible: false } })
 - Manage multiple representations
 - Component-based organization
 
-[📖 Full Documentation](./docs/useComponents.md)
+[📖 Full Documentation](docs/useComponents.md)
 </details>
 
 <details>
@@ -147,7 +147,7 @@ sequence.selectResidues(10, 20)
 - Chain information
 - Integration with structure
 
-[📖 Full Documentation](./docs/useSequence.md)
+[📖 Full Documentation](docs/useSequence.md)
 </details>
 
 <details>
@@ -166,7 +166,7 @@ setAxes({ visible: true, size: 0.5 })
 - Customizable colors
 - Corner positioning
 
-[📖 Full Documentation](./docs/useAxes.md)
+[📖 Full Documentation](docs/useAxes.md)
 </details>
 
 <details>
@@ -185,7 +185,7 @@ setBackground('#1a1a1a') // Dark theme
 - Theme integration
 - Global state sync
 
-[📖 Full Documentation](./docs/useBackground.md)
+[📖 Full Documentation](docs/useBackground.md)
 </details>
 
 <details>
@@ -204,7 +204,7 @@ setFog({ enabled: true, intensity: 50 })
 - Atmospheric effects
 - Performance optimized
 
-[📖 Full Documentation](./docs/useFog.md)
+[📖 Full Documentation](docs/useFog.md)
 </details>
 
 <details>
@@ -223,7 +223,7 @@ setStereo({ on: true, eyeSeparation: 0.064 })
 - VR/AR ready
 - Cross-eye/parallel viewing
 
-[📖 Full Documentation](./docs/useStereo.md)
+[📖 Full Documentation](docs/useStereo.md)
 </details>
 
 <details>
@@ -242,7 +242,7 @@ setViewport({ pixelRatio: 2 }) // Enable HD rendering
 - Performance optimization
 - Multiple viewport modes
 
-[📖 Full Documentation](./docs/useViewport.md)
+[📖 Full Documentation](docs/useViewport.md)
 </details>
 
 <details>
@@ -261,7 +261,7 @@ return <div ref={container.for} />
 - TypeScript generics
 - Zero prop drilling
 
-[📖 Full Documentation](./docs/useEvent.md)
+[📖 Full Documentation](docs/useEvent.md)
 </details>
 
 ## 🏗️ Architecture
