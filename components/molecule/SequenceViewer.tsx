@@ -1,3 +1,4 @@
+/** @jsxImportSource @emotion/react */
 import React, { useState, useEffect } from 'react'
 import styled from '@emotion/styled'
 import { useSequence, Residue } from '../../hooks/useSequence'
@@ -14,28 +15,84 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
   const [dragStart, setDragStart] = useState<Residue | null>(null)
   const [dragModifiers, setDragModifiers] = useState<{ ctrlKey: boolean; metaKey: boolean }>({ ctrlKey: false, metaKey: false })
 
-  // Selection is now handled by the sequence state's residue.selected property
-
-  // Add global mouse up handler to end drag
+  // Global mouse up handler to end drag
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false)
       setDragStart(null)
       setDragModifiers({ ctrlKey: false, metaKey: false })
     }
-    
+
     document.addEventListener('mouseup', handleMouseUp)
     return () => document.removeEventListener('mouseup', handleMouseUp)
   }, [])
 
-  
-  // Helper to get residues in a range
-  function getResidueRange(residues: Residue[], start: Residue, end: Residue): Residue[] {
+  // Helper functions
+  const getResidueRange = (residues: Residue[], start: Residue, end: Residue): Residue[] => {
     const startIdx = residues.findIndex(r => r.index === start.index)
     const endIdx = residues.findIndex(r => r.index === end.index)
     const minIdx = Math.min(startIdx, endIdx)
     const maxIdx = Math.max(startIdx, endIdx)
     return residues.slice(minIdx, maxIdx + 1)
+  }
+
+  const handleResidueClick = (residue: Residue, e: React.MouseEvent) => {
+    e.preventDefault()
+    const { residues } = sequence
+    const isSelected = residue.selected
+
+    if (e.shiftKey) {
+      const selectedResidues = residues.filter(r => r.selected)
+      if (selectedResidues.length > 0) {
+        const lastSelected = selectedResidues[selectedResidues.length - 1]
+        const rangeSelection = getResidueRange(residues, lastSelected, residue)
+        setSequence({ residues: rangeSelection })
+      } else {
+        setSequence({ residues: [residue] })
+      }
+    } else if (!e.ctrlKey && !e.metaKey) {
+      // Single click without modifiers
+      if (isSelected && residues.filter(r => r.selected).length === 1) {
+        // If clicking the only selected residue, deselect it
+        setSequence({ residues: [] })
+      } else {
+        // Otherwise, select only this residue
+        setSequence({ residues: [residue] })
+      }
+    } else {
+      // Ctrl/Cmd click - toggle this residue
+      if (isSelected) {
+        const newSelection = residues.filter(r => r.selected && r !== residue)
+        setSequence({ residues: newSelection })
+      } else {
+        const newSelection = residues.filter(r => r.selected)
+        newSelection.push(residue)
+        setSequence({ residues: newSelection })
+      }
+    }
+  }
+
+  const handleDragStart = (residue: Residue, e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart(residue)
+    setDragModifiers({ ctrlKey: e.ctrlKey, metaKey: e.metaKey })
+  }
+
+  const handleDragOver = (residue: Residue) => {
+    if (!isDragging || !dragStart) return
+
+    const { residues } = sequence
+    const rangeSelection = getResidueRange(residues, dragStart, residue)
+
+    if (dragModifiers.ctrlKey || dragModifiers.metaKey) {
+      // Add range to existing selection
+      const existingSelection = residues.filter(r => r.selected)
+      const combinedSet = new Set([...existingSelection, ...rangeSelection])
+      setSequence({ residues: Array.from(combinedSet) })
+    } else {
+      // Replace selection with range
+      setSequence({ residues: rangeSelection })
+    }
   }
 
   if (sequence.loading) {
@@ -46,24 +103,21 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
     )
   }
 
-  const residues = sequence.residues
-  const currentChain = sequence.chain
-  const currentEntity = sequence.entities.find(e => e.id === sequence.entity)
-  const isNonPolymer = currentEntity?.type && currentEntity.type !== 'polymer'
-  
+  const { residues, chains, entities, structures } = sequence
+  const isNonPolymer = entities.find(e => e.id === sequence.entity)?.type !== 'polymer'
+
   return (
     <Container>
-      {/* Dropdowns */}
+      {/* Control Dropdowns */}
       <DropdownContainer>
-        {/* Structure dropdown - always show for now */}
-        {sequence.structures.length > 0 && (
+        {structures.length > 0 && (
           <DropdownGroup>
             <DropdownLabel>Structure</DropdownLabel>
             <Dropdown
               value={sequence.structure || ''}
               onChange={(e) => setSequence({ structure: e.target.value })}
             >
-              {sequence.structures.map(struct => (
+              {structures.map(struct => (
                 <option key={struct.id} value={struct.id}>
                   {struct.label}
                 </option>
@@ -72,7 +126,6 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
           </DropdownGroup>
         )}
 
-        {/* Mode dropdown */}
         <DropdownGroup>
           <DropdownLabel>Mode</DropdownLabel>
           <Dropdown
@@ -85,15 +138,14 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
           </Dropdown>
         </DropdownGroup>
 
-        {/* Entity dropdown */}
-        {sequence.entities.length > 0 && (
+        {entities.length > 0 && (
           <DropdownGroup>
             <DropdownLabel>Entity</DropdownLabel>
             <Dropdown
               value={sequence.entity || ''}
               onChange={(e) => setSequence({ entity: e.target.value })}
             >
-              {sequence.entities.map((entity) => (
+              {entities.map((entity) => (
                 <option key={entity.id} value={entity.id}>
                   {entity.label ? `${entity.id}: ${entity.label}` : `Entity ${entity.id}`}
                 </option>
@@ -102,15 +154,14 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
           </DropdownGroup>
         )}
 
-        {/* Chain dropdown */}
-        {sequence.chains.length > 0 && (
+        {chains.length > 0 && (
           <DropdownGroup>
             <DropdownLabel>Chain</DropdownLabel>
             <Dropdown
               value={sequence.chain || ''}
               onChange={(e) => setSequence({ chain: e.target.value })}
             >
-              {sequence.chains.map(chain => (
+              {chains.map(chain => (
                 <option key={chain.id} value={chain.id}>
                   {chain.label || chain.id}
                 </option>
@@ -119,20 +170,22 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
           </DropdownGroup>
         )}
       </DropdownContainer>
-      
+
+      {/* Sequence Display */}
       <ChainContainer>
         <ChainHeader>
-          <ChainLabel>{sequence.chains.find(c => c.id === currentChain)?.label || 'Sequence'}</ChainLabel>
+          <ChainLabel>
+            {chains.find(c => c.id === sequence.chain)?.label || 'Sequence'}
+          </ChainLabel>
           <ChainInfo>
-            {residues ? `${residues.length} residues` : 'No sequence data'}
+            {residues.length > 0 ? `${residues.length} residues` : 'No sequence data'}
           </ChainInfo>
         </ChainHeader>
-        
-        <SequenceContainer>
+
+        <SequenceWrapper>
           {!residues || residues.length === 0 ? (
             <NoSequenceMessage>No sequence data available for this entity</NoSequenceMessage>
           ) : isNonPolymer ? (
-            // For non-polymer entities (ions, water, ligands), show residue info in a simpler format
             <NonPolymerContainer>
               {residues.map((residue) => (
                 <NonPolymerResidue
@@ -146,92 +199,51 @@ export function SequenceViewer({ molstarId = DEFAULT_MOLSTAR_ID }: SequenceViewe
               ))}
             </NonPolymerContainer>
           ) : (
-            residues.map((residue, i) => {
-              const residueKey = `${residue.chainId}-${residue.seqId}`
-              const isSelected = residue.selected
-              const isHighlighted = highlightedResidues.has(residueKey)
+            <SequenceContainer>
+              {residues.map((residue, i) => {
+                const residueKey = `${residue.chainId}-${residue.seqId}`
+                const isSelected = residue.selected
+                const isHighlighted = highlightedResidues.has(residueKey)
 
-              return (
-                <React.Fragment key={residueKey}>
-                  <ResidueSpan
-                    isSelected={isSelected}
-                    isHighlighted={isHighlighted}
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      setIsDragging(true)
-                      setDragStart(residue)
-                      setDragModifiers({ ctrlKey: e.ctrlKey, metaKey: e.metaKey })
-                      
-                      if (e.shiftKey) {
-                        // Extend selection from last selected
-                        const selectedResidues = residues.filter(r => r.selected)
-                        if (selectedResidues.length > 0) {
-                          const lastSelected = selectedResidues[selectedResidues.length - 1]
-                          const rangeSelection = getResidueRange(residues, lastSelected, residue)
-                          setSequence({ residues: rangeSelection })
+                return (
+                  <React.Fragment key={residueKey}>
+                    <ResidueSpan
+                      isSelected={isSelected}
+                      isHighlighted={isHighlighted}
+                      onMouseDown={(e) => {
+                        handleDragStart(residue, e)
+                        handleResidueClick(residue, e)
+                      }}
+                      onMouseEnter={() => {
+                        if (isDragging) {
+                          handleDragOver(residue)
                         } else {
-                          setSequence({ residues: [residue] })
+                          setHighlightedResidues(new Set([residueKey]))
                         }
-                      } else if (!e.ctrlKey && !e.metaKey) {
-                        // Single click without modifiers
-                        if (isSelected && residues.filter(r => r.selected).length === 1) {
-                          // If clicking the only selected residue, deselect it
-                          setSequence({ residues: [] })
-                        } else {
-                          // Otherwise, select only this residue
-                          setSequence({ residues: [residue] })
+                      }}
+                      onMouseLeave={() => {
+                        if (!isDragging) {
+                          setHighlightedResidues(new Set())
                         }
-                      } else {
-                        // Ctrl/Cmd click - toggle this residue
-                        if (isSelected) {
-                          const newSelection = residues.filter(r => r.selected && r !== residue)
-                          setSequence({ residues: newSelection })
-                        } else {
-                          const newSelection = residues.filter(r => r.selected)
-                          newSelection.push(residue)
-                          setSequence({ residues: newSelection })
-                        }
-                      }
-                    }}
-                    onMouseEnter={() => {
-                      if (isDragging && dragStart) {
-                        // Update selection as we drag
-                        const rangeSelection = getResidueRange(residues, dragStart, residue)
-                        
-                        if (dragModifiers.ctrlKey || dragModifiers.metaKey) {
-                          // Add range to existing selection
-                          const existingSelection = residues.filter(r => r.selected)
-                          const combinedSet = new Set([...existingSelection, ...rangeSelection])
-                          setSequence({ residues: Array.from(combinedSet) })
-                        } else {
-                          // Replace selection with range
-                          setSequence({ residues: rangeSelection })
-                        }
-                      } else {
-                        setHighlightedResidues(new Set([residueKey]))
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      if (!isDragging) {
-                        setHighlightedResidues(new Set())
-                      }
-                    }}
-                    title={`${residue.name}${residue.seqId}`}
-                  >
-                    {residue.code}
-                  </ResidueSpan>
-                  {(i + 1) % 10 === 0 && <SequenceBreak />}
-                </React.Fragment>
-              )
-            })
+                      }}
+                      title={`${residue.name}${residue.seqId}`}
+                    >
+                      {residue.code}
+                    </ResidueSpan>
+                    {(i + 1) % 10 === 0 && <SequenceBreak />}
+                  </React.Fragment>
+                )
+              })}
+            </SequenceContainer>
           )}
-          </SequenceContainer>
-          
-          <SequenceStats>
-            <span>Selected: {residues ? residues.filter(r => r.selected).length : 0}</span>
-          </SequenceStats>
-        </ChainContainer>
-      
+        </SequenceWrapper>
+
+        <SequenceStats>
+          <span>Selected: {residues.filter(r => r.selected).length}</span>
+        </SequenceStats>
+      </ChainContainer>
+
+      {/* Action Buttons */}
       <ActionBar>
         <Button onClick={() => setSequence({ residues: [] })}>
           Clear Selection
@@ -285,7 +297,6 @@ const Dropdown = styled.select`
   min-width: 150px;
   max-width: 300px;
   
-  /* Handle long text with ellipsis */
   option {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -335,12 +346,15 @@ const ChainInfo = styled.div`
   color: #718096;
 `
 
+const SequenceWrapper = styled.div`
+  background: white;
+`
+
 const SequenceContainer = styled.div`
   font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
   font-size: 12px;
   line-height: 1.8;
   padding: 12px;
-  background: white;
   overflow-x: auto;
   white-space: pre-wrap;
   word-break: break-all;
@@ -357,8 +371,8 @@ const ResidueSpan = styled.span<{ isSelected: boolean; isHighlighted: boolean }>
   transition: all 0.2s;
   background-color: ${props =>
     props.isSelected ? '#3182ce' :
-    props.isHighlighted ? '#e6fffa' :
-    'transparent'
+      props.isHighlighted ? '#e6fffa' :
+        'transparent'
   };
   color: ${props => props.isSelected ? 'white' : '#2d3748'};
   
