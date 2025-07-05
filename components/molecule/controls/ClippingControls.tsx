@@ -1,0 +1,65 @@
+/** @jsxImportSource @emotion/react */
+import { FC } from 'react'
+import { useClipping } from '../../../hooks/useClipping'
+import { ToggleSwitch, Slider, SliderLabel } from './styled'
+
+interface ClippingControlsProps {
+  id?: string
+}
+
+export const ClippingControls: FC<ClippingControlsProps> = ({ id }) => {
+  const [clipping, setClipping] = useClipping(id)
+
+  return (
+    <>
+      <SliderLabel>
+        <span>Clipping</span>
+        <span>{clipping.radius}%</span>
+      </SliderLabel>
+      <Slider
+        type="range"
+        min="0"
+        max="99"
+        value={clipping.radius}
+        onChange={(e) => {
+          const value = parseInt(e.target.value)
+          setClipping({ radius: value })
+        }}
+      />
+
+      {clipping.radius > 0 && (
+        <>
+          <SliderLabel>
+            <span>Far</span>
+            <ToggleSwitch>
+              <input
+                type="checkbox"
+                checked={clipping.clipFar}
+                onChange={(e) => {
+                  setClipping({ clipFar: e.target.checked })
+                }}
+              />
+              <span></span>
+            </ToggleSwitch>
+          </SliderLabel>
+
+          <SliderLabel>
+            <span>Min Near</span>
+            <span>{clipping.minNear.toFixed(1)}</span>
+          </SliderLabel>
+          <Slider
+            type="range"
+            min="0.1"
+            max="100"
+            step="0.1"
+            value={clipping.minNear}
+            onChange={(e) => {
+              const value = parseFloat(e.target.value)
+              setClipping({ minNear: value })
+            }}
+          />
+        </>
+      )}
+    </>
+  )
+}

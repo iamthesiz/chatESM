@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@emotion/react": ["./node_modules/@emotion/react"],
+      "@emotion/styled": ["./node_modules/@emotion/styled"]
+    }
+  }
+}
