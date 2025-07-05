@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useMolstar } from './useMolstar'
 import { StructureElement } from 'molstar/lib/mol-model/structure'
 import { SortedArray } from 'molstar/lib/mol-data/int'
-
+import { sleep } from '../utils'
 export interface Residue {
   index: number
   code: string      // One-letter code (A, C, G, T, etc.)
@@ -546,91 +546,7 @@ export function useSequence(id: string): [SequenceState, SetSequence] {
       return newState
     })
 
-    // Comment out subscriptions for now
-    // const structureChangeHandler = molstar.state.events.object.created.subscribe(async (e: any) => {
-    //   if (e.obj?.type?.name === 'Structure') {
-    //     console.log('Structure created/updated, refreshing sequence data')
-    //     await sleep(100)
-    //     updateData()
-    //   }
-    // })
-
-    // const structureRemovedHandler = molstar.state.events.object.removed.subscribe(() => {
-    //   updateData()
-    // })
-
-    // return () => {
-    //   structureChangeHandler?.unsubscribe()
-    //   structureRemovedHandler?.unsubscribe()
-    // }
   }, [molstar.loading, molstar?.managers?.structure?.hierarchy])
-
-  // Comment out automatic chain updates for now
-  // useEffect(() => {
-  //   if (state.entity) {
-  //     const { allChains } = extractStructuresAndEntities()
-  //     const chains = getChainsForEntity(state.entity, allChains)
-  //     setState(prev => ({
-  //       ...prev,
-  //       chains,
-  //       chain: chains.length > 0 ? chains[0].id : null
-  //     }))
-  //   }
-  // }, [state.entity, extractStructuresAndEntities, getChainsForEntity])
-
-  // Comment out automatic residue updates for now
-  // useEffect(() => {
-  //   if (state.chain) {
-  //     const residues = getResiduesForChain(state.chain)
-  //     setState(prev => ({ ...prev, residues }))
-  //   }
-  // }, [state.chain, getResiduesForChain])
-
-  // Comment out residue selection sync for now
-  // useEffect(() => {
-  //   if (!molstar || !state.residues) return
-
-  //   const handleSelectionChange = () => {
-  //     // Get current selection from Molstar
-  //     const loci = molstar.managers.structure.selection.loci
-  //     const selectedSet = new Set<string>()
-
-  //     if (loci && loci.kind === 'element-loci') {
-  //       for (const e of loci.elements) {
-  //         const { unit, indices } = e
-  //         for (let i = 0; i < indices.length; i++) {
-  //           const idx = indices[i]
-  //           if (unit.model.atomicHierarchy.residues) {
-  //             const residueIndex = unit.model.atomicHierarchy.residueAtomSegments.index[idx]
-  //             const chainIndex = unit.model.atomicHierarchy.residues.chainIndex[residueIndex]
-  //             const chainId = unit.model.atomicHierarchy.chains.label_asym_id.value(chainIndex)
-  //             const seqId = unit.model.atomicHierarchy.residues.label_seq_id.value(residueIndex)
-  //             selectedSet.add(`${chainId}-${seqId}`)
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     // Update residue selection state
-  //     setState(prev => {
-  //       if (!prev.residues) return prev
-  //       return {
-  //         ...prev,
-  //         residues: prev.residues.map(r => ({
-  //           ...r,
-  //           selected: selectedSet.has(`${r.chainId}-${r.seqId}`)
-  //         }))
-  //       }
-  //     })
-  //   }
-
-  //   const sub = molstar.managers.structure.selection.events.changed.subscribe(handleSelectionChange)
-
-  //   // Initial sync
-  //   handleSelectionChange()
-
-  //   return () => sub?.unsubscribe()
-  // }, [molstar, state.chain])
 
   // SetSequence function to update state
   const setSequence: SetSequence = (update) => {
@@ -831,9 +747,9 @@ export function useSequence(id: string): [SequenceState, SetSequence] {
                     console.log('Focus sphere:', { center: sphere.center, radius: sphere.radius })
 
                     // Add a small delay to ensure the selection is rendered before focusing
-                    setTimeout(() => {
+                    sleep(100).then(() => {
                       molstar.canvas3d.camera.focus(sphere.center, sphere.radius * 3.0, 500)
-                    }, 100)
+                    })
                   } else {
                     console.log('No boundary found for loci')
                   }

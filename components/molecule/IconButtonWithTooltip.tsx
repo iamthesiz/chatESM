@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import styled from '@emotion/styled'
+import { sleep } from '../../utils'
 
 interface TooltipContextType {
   activeTooltip: string | null
@@ -37,10 +38,11 @@ export function IconButtonWithTooltip({ id, title, onClick, children }: IconButt
     }
   }
 
-  const handleClick = () => {
+  const handleClick = async () => {
     onClick()
     setTooltipText('Copied!')
-    setTimeout(() => setTooltipText(title), 1500)
+    await sleep(1500)
+    setTooltipText(title)
   }
 
   const handleMouseEnter = () => {

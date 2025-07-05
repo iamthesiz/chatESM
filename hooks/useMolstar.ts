@@ -2,27 +2,11 @@ import { useMemo, useRef, useReducer } from 'react'
 import { useAtom } from 'jotai'
 import { createPluginUI } from 'molstar/lib/mol-plugin-ui'
 import { renderReact18 } from 'molstar/lib/mol-plugin-ui/react18'
-import { PluginStateObject } from 'molstar/lib/mol-plugin-state/objects'
 import useIdEffect from './useIdEffect'
 import { useEvent } from './useEvent'
-import { getStructureSource } from '../utils'
+import { getStructureSource, sleep, isPdbId, isUrl } from '../utils'
 import { molstarStateAtomFamily } from './atoms'
 import 'molstar/lib/mol-plugin-ui/skin/light.scss'
-
-// Check if string is a PDB ID (4 characters, alphanumeric)
-const isPdbId = (str: string): boolean => {
-  return /^[0-9A-Za-z]{4}$/.test(str)
-}
-
-// Check if string is a URL
-const isUrl = (str: string): boolean => {
-  try {
-    new URL(str)
-    return true
-  } catch {
-    return false
-  }
-}
 
 interface LoadOptions {
   pdbId?: string
@@ -43,7 +27,6 @@ export function useMolstar(id: string, _typeId?: string) {
   const isInitializing = useRef(false)
   const rerender = useReducer((x: number) => x + 1, 0)[1]
 
-  // Initialize Molstar instance
   const initMolstar = async () => {
     if (!container.ref || isInitializing.current || state.molstar) {
       return
@@ -77,14 +60,8 @@ export function useMolstar(id: string, _typeId?: string) {
         }
       })
 
-      // Store plugin in state
-      setState(prev => {
-        return { ...prev, molstar: plugin }
-      })
-
-      // Check for auto-loading after initialization
+      setState(prev => ({ ...prev, molstar: plugin }))
       checkAutoLoad(plugin)
-
     } catch (error) {
       setState(prev => ({ ...prev, loading: false }))
       isInitializing.current = false
@@ -118,18 +95,14 @@ export function useMolstar(id: string, _typeId?: string) {
     }
   }
 
-  // Initialize Molstar on mount/unmount using useIdEffect
   const hook = useIdEffect(id, async (isFirstMount: boolean) => {
 
     if (isFirstMount) {
 
-      // Set up the rerender function in context
       if (!hook.context.rerender) {
         hook.context.rerender = rerender
       }
 
-      // Check if already mounted (only runs on first mount)
-      // The mount event won't fire if it's already mounted
       if (container.ref) {
         await initMolstar()
       } else {
@@ -147,7 +120,6 @@ export function useMolstar(id: string, _typeId?: string) {
     }
   }, [])
 
-  // Load structure data helper
   const loadStructureData = async (config: LoadOptions) => {
     const molstar = state.molstar
     if (!molstar) {
@@ -159,31 +131,17 @@ export function useMolstar(id: string, _typeId?: string) {
     try {
       // Use the plugin's builders which handle state management properly
       const isBinary = url.endsWith('.bcif')
-
-      // Download
       const data = await molstar.builders.data.download({ url, isBinary })
-
-      // Check if data is valid
       if (!data) {
         throw new Error('Failed to download structure data - invalid response')
       }
 
-      // Parse trajectory
       const trajectory = await molstar.builders.structure.parseTrajectory(data, format)
-
-      // Create model
       const model = await molstar.builders.structure.createModel(trajectory)
-
-      // Create structure
       const structure = await molstar.builders.structure.createStructure(model)
 
-      // Apply default representation preset
-      const presetResult = await molstar.builders.structure.representation.applyPreset(structure, 'auto')
-
-      // Check what representations were created
-      const reprs = molstar.state.data.selectQ((q: any) =>
-        q.ofType(PluginStateObject.Molecule.Structure.Representation3D)
-      )
+      // Apply default representation preset so the structure is visible
+      await molstar.builders.structure.representation.applyPreset(structure, 'auto')
 
       return structure
     } catch (error) {
@@ -202,18 +160,14 @@ export function useMolstar(id: string, _typeId?: string) {
     rerender()
 
     try {
-      // Use the plugin's built-in clear method which properly handles state cleanup
       await molstar.clear()
-
-      // Small delay to ensure state is fully cleared
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await sleep(100)
 
       await loadStructureData(config)
 
       setState(prev => ({ ...prev, loading: false }))
       rerender()
 
-      // Return the molstar instance for immediate use
       return molstar
     } catch (error) {
       setState(prev => ({ ...prev, loading: false }))
@@ -222,7 +176,6 @@ export function useMolstar(id: string, _typeId?: string) {
     }
   }
 
-  // Use object with getter to avoid creating new objects
   const molstarWithLoading = useMemo(() => {
     const molstar = state.molstar
 
@@ -238,11 +191,9 @@ export function useMolstar(id: string, _typeId?: string) {
       }
     }
 
-    // Helper to create property descriptors
     const getter = (fn: () => any) => ({ get: fn, enumerable: true, configurable: true })
     const value = (val: any) => ({ value: val, enumerable: true, configurable: true })
 
-    // Add all properties at once using Object.defineProperties
     const result = Object.defineProperties(molstar, {
       // State properties
       loading: getter(() => state.loading),
@@ -256,6 +207,7 @@ export function useMolstar(id: string, _typeId?: string) {
 
       // Container ref (pass the whole container object which has .for)
       ref: value(container.ref),
+      // Makes sure each useMolstar hook has the same ref
       for: getter(() => container.for),
 
       // Convenient aliases as getters

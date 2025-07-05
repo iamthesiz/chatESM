@@ -3,7 +3,9 @@ import styled from '@emotion/styled'
 import { useState, useRef, useEffect } from 'react'
 import { useMolecule } from '../../hooks/useMolecule'
 import { useAxes } from '../../hooks/useAxes'
+import useToggles from 'toggles'
 import type { FC } from 'react'
+import { sleep } from '../../utils'
 
 interface ScreenshotButtonProps {
   id?: string
@@ -12,9 +14,8 @@ interface ScreenshotButtonProps {
 export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
   const [molecule] = useMolecule(id)
   const [axes, setAxes] = useAxes(id)
-  const [showDropdown, setShowDropdown] = useState(false)
+  const [{ dropdown, transparent }, { toggle, close }] = useToggles(false, false)
   const [format, setFormat] = useState<'png' | 'jpeg' | 'webp'>('png')
-  const [transparent, setTransparent] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [copyButtonText, setCopyButtonText] = useState('Copy')
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -23,64 +24,59 @@ export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false)
+        close(dropdown)
       }
     }
 
-    if (showDropdown) {
+    if (dropdown.isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showDropdown])
+  }, [dropdown.isOpen])
 
   const updatePreview = async () => {
     if (!molecule.screenshot) return
-    
+
     const dataUrl = await molecule.screenshot({
       download: false,
-      transparent
+      transparent: transparent.isOn
     })
-    
+
     if (dataUrl && typeof dataUrl === 'string') {
       setPreview(dataUrl)
     }
   }
 
   const handleScreenshotClick = async () => {
-    if (!showDropdown) {
+    if (!dropdown.isOpen) {
       await updatePreview()
     }
-    setShowDropdown(!showDropdown)
+    toggle(dropdown)
   }
 
-  const handleTransparentChange = async (checked: boolean) => {
-    setTransparent(checked)
+  const handleTransparentChange = async () => {
+    toggle(transparent)
     await updatePreview()
   }
 
   const handleAxesChange = async (checked: boolean) => {
     setAxes({ visible: checked })
-    
-    // Update preview after a short delay
-    setTimeout(async () => {
-      await updatePreview()
-    }, 100)
+    await updatePreview()
   }
 
   const handleCopy = async () => {
     try {
       setCopyButtonText('Copied!')
       await molecule.copyScreenshot({
-        transparent,
+        transparent: transparent.isOn,
         format,
         axes: axes.visible
       })
-      setTimeout(() => {
-        setCopyButtonText('Copy')
-      }, 1500)
+      await sleep(1500)
+      setCopyButtonText('Copy')
     } catch (err) {
       console.error('Failed to copy screenshot:', err)
     }
@@ -88,12 +84,12 @@ export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
 
   const handleDownload = async () => {
     await molecule.downloadScreenshot({
-      transparent,
+      transparent: transparent.isOn,
       format,
       axes: axes.visible,
       filename: `molecule-${Date.now()}.${format}`
     })
-    setShowDropdown(false)
+    close(dropdown)
   }
 
   return (
@@ -102,7 +98,7 @@ export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
         Screenshot
       </ControlButton>
 
-      {showDropdown && (
+      {dropdown.isOpen && (
         <Dropdown>
           {preview && (
             <Preview>
@@ -128,8 +124,8 @@ export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
               <ToggleSwitch>
                 <input
                   type="checkbox"
-                  checked={transparent}
-                  onChange={(e) => handleTransparentChange(e.target.checked)}
+                  checked={transparent.isChecked}
+                  onChange={handleTransparentChange}
                 />
                 <span></span>
               </ToggleSwitch>

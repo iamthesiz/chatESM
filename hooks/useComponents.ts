@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useReducer } from 'react'
 import { useMolstar } from './useMolstar'
 import { determineComponentType, extractRepresentationType, repTypeMap, REPRESENTATION_PRESETS } from '../utils/molstar-selections'
 import { PresetStructureRepresentations } from 'molstar/lib/mol-plugin-state/builder/structure/representation-preset'
+import { sleep } from '../utils'
 
 export interface Component {
   type: string          // 'protein', 'ligand', 'water', 'ion', 'nucleic', or 'custom'
@@ -317,11 +318,7 @@ export function useComponents(id: string): [components: Component[], manager: Co
   useEffect(() => {
     if (!molstar.loading) {
       setLoading(false)
-
-      // Add a small delay to ensure structure is fully loaded
-      setTimeout(() => {
-        updateComponents()
-      }, 500)
+      sleep(500).then(updateComponents)
     } else {
       setLoading(true)
     }

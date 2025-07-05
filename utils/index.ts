@@ -3,6 +3,21 @@ import { Vec3 } from 'molstar/lib/mol-math/linear-algebra'
 
 export const sleep = (ms = 0) => new Promise(r => setTimeout(r, ms))
 
+// Check if string is a PDB ID (4 characters, alphanumeric)
+export const isPdbId = (str: string): boolean => {
+  return /^[0-9A-Za-z]{4}$/.test(str)
+}
+
+// Check if string is a URL
+export const isUrl = (str: string): boolean => {
+  try {
+    new URL(str)
+    return true
+  } catch {
+    return false
+  }
+}
+
 /**
  * Convert a Vec3 to a number array
  */
