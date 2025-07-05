@@ -1,6 +1,21 @@
 import { LoadConfig } from "../hooks/types"
+import { Vec3 } from 'molstar/lib/mol-math/linear-algebra'
 
 export const sleep = (ms = 0) => new Promise(r => setTimeout(r, ms))
+
+/**
+ * Convert a Vec3 to a number array
+ */
+export function vec3ToArray(vec: Vec3): [number, number, number] {
+  return [vec[0], vec[1], vec[2]]
+}
+
+/**
+ * Convert a number array to a Vec3
+ */
+export function arrayToVec3(arr: [number, number, number]): Vec3 {
+  return Vec3.create(arr[0], arr[1], arr[2])
+}
 
 export const copyImage = async (dataUrl: string) => {
   try {
@@ -51,6 +66,21 @@ export const hexToRgb = (hex: string): { r: number, g: number, b: number } | nul
   } : null
 }
 
+// Convert hex color to Molstar color format (number)
+export const hexToColor = (hex: string): number => {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return 0
+  return (rgb.r << 16) | (rgb.g << 8) | rgb.b
+}
+
+// Convert Molstar color (number) to hex string
+export const colorToHex = (color: number): string => {
+  const r = (color >> 16) & 0xff
+  const g = (color >> 8) & 0xff
+  const b = color & 0xff
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+}
+
 // Helper to detect format from extension
 export const detectFormatFromExtension = (extension: string | undefined): string => {
   const formatMap: Record<string, string> = {
@@ -67,7 +97,8 @@ export const detectFormatFromExtension = (extension: string | undefined): string
 // Helper to get URL and format from config
 export const getStructureSource = (config: LoadConfig): { url: string, format: string } => {
   if (config.pdbId) {
-    const url = `https://files.rcsb.org/download/${config.pdbId}.cif`
+    // Use .bcif format which is more reliable and faster
+    const url = `https://models.rcsb.org/${config.pdbId}.bcif`
     return { url, format: 'mmcif' }
   }
 
@@ -145,3 +176,111 @@ export const hideNativeControlsStyle = () => {
     document.head.appendChild(styleElement)
   }
 }
+
+/**
+ * Set fog parameters for a Molstar instance
+ * @param molstar - The Molstar plugin instance
+ * @param options - Fog configuration options
+ * @param options.intensity - Fog intensity (0-100, where 0 is no fog)
+ * @param options.color - Fog color as hex string (optional, defaults to background color)
+ * @param options.nearFactor - Factor to adjust fog near distance (optional)
+ * @param options.farFactor - Factor to adjust fog far distance (optional)
+ */
+export const setFog = (molstar: any, options: {
+  intensity?: number
+  color?: string
+  nearFactor?: number
+  farFactor?: number
+} = {}) => {
+  if (!molstar?.canvas) {
+    console.warn('Canvas3D not available in molstar instance')
+    return
+  }
+
+  const canvas3d = molstar.canvas
+  const camera = canvas3d.camera
+
+  // Update fog intensity through Canvas3D props
+  if (options.intensity !== undefined) {
+    const intensity = Math.max(0, Math.min(100, options.intensity))
+    
+    canvas3d.setProps({
+      cameraFog: intensity > 0 
+        ? { name: 'on', params: { intensity } }
+        : { name: 'off' }
+    })
+  }
+
+  // Update fog distances directly on camera if custom factors provided
+  if (options.nearFactor !== undefined || options.farFactor !== undefined) {
+    const currentState = camera.state
+    const cameraDistance = Math.sqrt(
+      Math.pow(currentState.position[0] - currentState.target[0], 2) +
+      Math.pow(currentState.position[1] - currentState.target[1], 2) +
+      Math.pow(currentState.position[2] - currentState.target[2], 2)
+    )
+
+    if (options.nearFactor !== undefined) {
+      camera.fogNear = cameraDistance * options.nearFactor
+    }
+
+    if (options.farFactor !== undefined) {
+      camera.fogFar = cameraDistance * options.farFactor
+    }
+
+    // Trigger camera update
+    camera.update()
+  }
+
+  // Update fog color through renderer background color
+  if (options.color) {
+    const color = hexToColor(options.color)
+    canvas3d.setProps({
+      renderer: {
+        ...molstar.renderer,
+        backgroundColor: color
+      }
+    })
+  }
+}
+
+/**
+ * Get current fog parameters from a Molstar instance
+ * @param molstar - The Molstar plugin instance
+ * @returns Current fog configuration
+ */
+export const getFog = (molstar: any): {
+  intensity: number
+  color: string
+  fogNear: number
+  fogFar: number
+  enabled: boolean
+} | null => {
+  if (!molstar?.canvas) {
+    console.warn('Canvas3D not available in molstar instance')
+    return null
+  }
+
+  const canvas3d = molstar.canvas
+  const camera = molstar.camera
+  const props = canvas3d.props
+
+  const fogEnabled = molstar.fog.name === 'on'
+  const intensity = fogEnabled ? molstar.fog.params.intensity : 0
+  const backgroundColor = molstar.renderer.backgroundColor
+  const color = colorToHex(backgroundColor)
+
+  return {
+    intensity,
+    color,
+    fogNear: camera.fogNear,
+    fogFar: camera.fogFar,
+    enabled: fogEnabled
+  }
+}
+
+// Re-export selection utilities
+export * from './selection'
+export * from './selection-types'
+export * from './selection-builders'
+export * from './selection-transforms'

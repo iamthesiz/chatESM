@@ -1,4 +1,5 @@
 // Core types for useMolstar hook
+import type { Component } from './useComponents'
 
 export interface LoadConfig {
   // Source (one of these required)
@@ -46,18 +47,14 @@ export interface ScreenshotOptions {
 
 export interface MoleculeInstance {
   // State
-  isInitialized: boolean
+  mounted: boolean      // Whether the container DOM element is attached to the document
+  initialized: boolean  // Whether the Molstar plugin has been created and is ready
+  loaded: boolean       // Whether a molecular structure has been loaded into Molstar
+  loading: boolean      // Whether the molecular structure is currently loading
   selections: string[]  // Array of current selection queries
-  granularity?: any  // Current selection granularity
+  granularity?: any     // Current selection granularity
 
-  // Component visibility state
-  componentVisibility?: any
-
-  // Available components in the loaded structure
-  availableComponents?: string[]
-
-  // Active components with their details
-  components?: any
+  // Components are now managed via useComponents hook
 
   // Current appearance state
   background?: string
@@ -83,17 +80,10 @@ export interface MoleculeInstance {
 
   // Native Molstar features
   molstar?: any  // Direct access to Molstar plugin instance
-  ref?: React.RefObject<HTMLDivElement>  // Container element ref
+  ref?: HTMLElement | null  // Direct access to container element
+  for?: React.RefObject<HTMLDivElement>  // Ref for JSX usage
 
-  // Structure tools
-  toggleComponent: (ref: string) => Promise<void>
-  removeComponent: (ref: string) => Promise<void>
-
-  // Presets
-  applyComponentPreset: (preset: string) => Promise<void>
-
-  // Component creation
-  createComponent: (selection: string, representation: string, label?: string, checkExisting?: boolean) => Promise<void>
+  // Components are now managed via useComponents hook
 
   // Style presets
   setStylePreset: (preset: 'default' | 'illustrative' | 'publication' | 'performance') => Promise<void>
@@ -148,14 +138,25 @@ export interface StructureConfig {
 
 // Camera config
 export interface CameraConfig {
+  // Core camera properties (Molstar native)
   position?: [number, number, number]
   target?: [number, number, number]
   zoom?: number
-  view?: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom'
   projection?: 'perspective' | 'orthographic'
   fov?: number                             // Field of view for perspective
+  
+  // Camera effects
   clipping?: ClippingSettings
+  stereo?: {
+    enabled: boolean
+    eyeSeparation?: number
+    focus?: number
+  }
+  
+  // Animation
   animation?: 'off' | 'spin' | 'rock'
+  
+  // Visual helpers
   axes?: {
     opacity?: number
     scale?: number
@@ -165,11 +166,9 @@ export interface CameraConfig {
       z?: string
     }
   }
-  stereo?: {
-    enabled: boolean
-    eyeSeparation?: number
-    focus?: number
-  }
+  
+  // Custom props outside Molstar
+  up?: [number, number, number]           // Camera up vector
 }
 
 // Quality settings

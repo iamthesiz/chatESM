@@ -4,6 +4,14 @@ import useHook from './useHook'
 
 const unmounts = {}
 
+const parseIdParam = (idParam) => {
+  if (Array.isArray(idParam)) {
+    const [contextId, typeId] = idParam
+    return [contextId, typeId]
+  }
+  return [idParam, 'useIdEffect']
+}
+
 /**
  * @description
  * This calls useEffect on the 1st hook with the given ID
@@ -15,6 +23,7 @@ const unmounts = {}
  * useIdState or not.
  *
  * @example
+ * // Using string format (context-level)
  * useIdEffect('my-list-id', isFirstHookMount => {
  *     if (isFirstHookMount) {
  *       // runs 1 time per ID.
@@ -34,25 +43,32 @@ const unmounts = {}
  *   }
  * }, [dependencies, sameAsUseEffect])
  *
- * @param {*} id - ID of the hook
+ * @example
+ * // Using array format (type-level)
+ * useIdEffect(['my-list-id', 'item-component'], isFirstHookMount => {
+ *   // Logic for specific component type
+ * }, [deps])
+ *
+ * @param {string|Array} idParam - ID of the hook (string) or [contextId, typeId] (array)
  * @param {*} callback - useEffect callback function
  * @param {*} deps - dependencies for the useEffect
  */
-const useIdEffect = (baseId, callback, deps = [], debug = false) => {
-  const hook = useHook(baseId, 'useIdEffect')
-  const id = hook.sharedId
+const useIdEffect = (idParam, callback, deps = [], debug = false) => {
+  const [contextId, typeId] = parseIdParam(idParam)
+  const hook = useHook(contextId, typeId)
+  const id = hook.id;
   useEffect(() => {
     if (!unmounts[id]) {
       const unmount = callback(!unmounts[id])
       unmounts[id] = unmount ?? (() => { })
     } else {
-      callback(!unmounts[id])
+      callback(false)
     }
     return () => {
       if (typeof unmounts?.[id] === 'function') {
-        unmounts?.[id]?.(hook.lastToUnmount)
+        unmounts?.[id]?.(hook.last)
       }
-      if (hook.lastToUnmount) delete unmounts[id]
+      if (hook.last) delete unmounts[id]
     }
   }, [...deps, id])
   return hook
