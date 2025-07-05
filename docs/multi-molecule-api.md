@@ -3,10 +3,34 @@
 ## Overview
 This document outlines the API design for loading and managing multiple molecules in a single Molstar canvas.
 
-## Core API
+## Core API - Composable Approach
 
 ```typescript
-const [molecules, setMolecules] = useMolecules(canvasId)
+// Parent component manages the list
+const [molecules, setMolecules] = useMolecules()
+
+// Render each molecule with its own component
+return (
+  <div>
+    <div ref={molstar.ref} style={{ height: 500 }} />
+    {molecules.map(molecule => (
+      <MoleculeControls key={molecule.id} id={molecule.id} />
+    ))}
+  </div>
+)
+
+// Each molecule component uses useMolecule
+const MoleculeControls = ({ id }) => {
+  const [molecule, setMolecule] = useMolecule(id)
+  
+  return (
+    <div>
+      <h3>{molecule.label || id}</h3>
+      <button onClick={() => molecule.hide()}>Hide</button>
+      <button onClick={() => molecule.focus()}>Focus</button>
+    </div>
+  )
+}
 ```
 
 ### Key Features
@@ -55,67 +79,74 @@ await setMolecules(prev => prev.map(m =>
 await setMolecules([])
 ```
 
-### Accessing Molecules
+### Composable Pattern - Preferred Approach
+
 ```typescript
-// By index
-molecules[0].setRepresentation('cartoon')
-molecules[1].hide()
+// App component
+function MoleculeViewer() {
+  const [molecules, setMolecules] = useMolecules()
+  const molstar = useMolstar('viewer-1')
+  
+  return (
+    <div>
+      <div ref={molstar.ref} style={{ height: 500 }} />
+      
+      <button onClick={() => setMolecules(['1AON', '2HHB', '3PQR'])}>
+        Load Examples
+      </button>
+      
+      <div className="molecule-list">
+        {molecules.map(({ id }) => (
+          <MoleculeCard key={id} id={id} />
+        ))}
+      </div>
+    </div>
+  )
+}
 
-// Find by ID
-const target = molecules.find(m => m.id === 'target')
-target?.setColor('red')
-
-// Iterate
-molecules.forEach(mol => mol.setOpacity(0.8))
-
-// Check count
-if (molecules.length > 0) {
-  // Has molecules
+// Individual molecule component
+function MoleculeCard({ id }: { id: string }) {
+  const [molecule] = useMolecule(id)
+  
+  if (molecule.loading) return <div>Loading {id}...</div>
+  if (molecule.error) return <div>Error loading {id}</div>
+  
+  return (
+    <div className="molecule-card">
+      <h3>{molecule.label || id}</h3>
+      <p>{molecule.residueCount} residues</p>
+      
+      <button onClick={() => molecule.hide()}>
+        {molecule.visible ? 'Hide' : 'Show'}
+      </button>
+      <button onClick={() => molecule.focus()}>Focus</button>
+      <button onClick={() => molecule.setRepresentation('cartoon')}>Cartoon</button>
+      <button onClick={() => molecule.setRepresentation('surface')}>Surface</button>
+    </div>
+  )
 }
 ```
 
-## Molecule Object Interface
+## Molecule List Item Interface
+
+The `useMolecules` hook returns a simplified array:
 
 ```typescript
-interface Molecule {
-  // Identification
-  id: string              // Unique identifier ('1AON' or 'custom-id')
+interface MoleculeListItem {
+  id: string              // Unique identifier
   label?: string          // Display name
-  
-  // Source information
-  source: {
-    pdb?: string         // PDB ID
-    url?: string         // Remote URL
-    file?: File          // Uploaded file
-    smiles?: string      // SMILES string
-    data?: string        // Raw PDB/mmCIF data
-    emdb?: string        // EMDB ID
-    alphafold?: string   // AlphaFold ID
-  }
-  
-  // State
-  status: 'loading' | 'loaded' | 'error'
-  error?: Error
-  
-  // Methods
-  setRepresentation(type: 'cartoon' | 'surface' | 'ball-and-stick' | ...): void
-  setColor(color: string | ColorTheme): void
-  setOpacity(value: number): void
-  show(): void
-  hide(): void
-  focus(): void
-  remove(): void
-  
-  // Selection
-  select(selection: Selection): void
-  clearSelection(): void
-  
-  // Properties
-  readonly boundingBox: Box3D
-  readonly residueCount: number
-  readonly chainCount: number
+  source: string | MoleculeSource  // What to load
 }
-```
+
+type MoleculeSource = {
+  pdb?: string
+  url?: string
+  file?: File
+  smiles?: string
+  data?: string
+  emdb?: string
+  alphafold?: string
+}
 
 ## Advanced Patterns
 

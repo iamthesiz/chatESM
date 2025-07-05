@@ -264,6 +264,21 @@ return <div ref={container.for} />
 [📖 Full Documentation](docs/useEvent.md)
 </details>
 
+<details>
+<summary><b>🔮 useMolecules</b> - Manage multiple molecules at once <i>(coming soon)</i></summary>
+
+A powerful hook for managing multiple molecular structures in a single viewer.
+
+**Planned Features:**
+- Load multiple structures with one call: `await setMolecules(['1AON', '2HHB', '3PQR'])`
+- Mixed input types (PDB IDs, URLs, files, SMILES)
+- Array-based state management
+- Per-molecule controls and methods
+- Batch operations across all molecules
+
+[📖 View API Design](docs/multi-molecule-api.md)
+</details>
+
 ## 🏗️ Architecture
 
 ### Global State Management
