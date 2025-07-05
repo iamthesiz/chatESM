@@ -1,28 +1,37 @@
-# 🧬 useMolstar Documentation
+# 🧬 Molstar React Hooks Documentation
 
-> A powerful React hook that makes molecular visualization as easy as using useState
+> A comprehensive collection of React hooks that makes molecular visualization as easy as using useState
 
 ## Quick Links
 
-- [📖 Complete Guide](./useMolstar-guide.md) - Learn why useMolstar is amazing with real examples
-- [🔧 API Reference](./useMolstar-api.md) - Detailed API documentation
-- [🚀 Quick Start](#quick-start) - Get started in 2 minutes
+- [🎯 useMolstar](./useMolstar.md) - Core hook for managing Molstar instances
+- [🧬 useMolecule](./useMolecule.md) - High-level molecular visualization
+- [📷 useCamera](./useCamera.md) - Camera control and animations
+- [📸 useScreenshot](./useScreenshot.md) - Capture and export
+- [🧩 useComponents](./useComponents.md) - Molecular component management
+- [📝 useSequence](./useSequence.md) - Sequence data and selections
+- [📐 useAxes](./useAxes.md) - 3D orientation helper
+- [🎨 useBackground](./useBackground.md) - Background color control
+- [🌫️ useFog](./useFog.md) - Depth-based fog effects
+- [🥽 useStereo](./useStereo.md) - Stereoscopic 3D rendering
+- [🖼️ useViewport](./useViewport.md) - Viewport and resolution control
+- [🔗 useEvent](./useEvent.md) - Cross-component DOM references
 
 ## Quick Start
 
 ### 1. Basic Usage
 
 ```tsx
-import { useMolstar } from '../hooks/useMolstar'
+import { useMolecule } from 'molstar-react-hooks'
 
 function MyFirstMolecule() {
-  const [molecule] = useMolstar()
+  const [molecule] = useMolecule('viewer-1')
   
   useEffect(() => {
-    molecule.load({ pdbId: '1AON' })
+    molecule.load('1tqn')
   }, [])
   
-  return <div ref={molecule.ref} style={{ height: 500 }} />
+  return <div ref={molecule.for} style={{ height: 500 }} />
 }
 ```
 
@@ -30,18 +39,20 @@ function MyFirstMolecule() {
 
 ```tsx
 function InteractiveMolecule() {
-  const [molecule, { setAppearance, setGranularity }] = useMolstar()
+  const [molecule] = useMolecule('viewer-1')
+  const [background, setBackground] = useBackground('viewer-1')
+  const [camera, setCamera] = useCamera('viewer-1')
   
   return (
     <>
-      <div ref={molecule.ref} style={{ height: 500 }} />
+      <div ref={molecule.for} style={{ height: 500 }} />
       
-      <button onClick={() => setAppearance({ background: 'black' })}>
+      <button onClick={() => setBackground('#1a1a1a')}>
         Dark Mode
       </button>
       
-      <button onClick={() => setGranularity('residue')}>
-        Select Residues
+      <button onClick={() => setCamera({ zoom: 2 })}>
+        Zoom In
       </button>
       
       <button onClick={() => molecule.screenshot({ download: true })}>
@@ -56,18 +67,18 @@ function InteractiveMolecule() {
 
 ```tsx
 function CompareStructures() {
-  const [mol1] = useMolstar('molecule-1')
-  const [mol2] = useMolstar('molecule-2')
+  const [molecule1] = useMolecule('molecule-1')
+  const [molecule2] = useMolecule('molecule-2')
   
   useEffect(() => {
-    mol1.load({ pdbId: '1AON', background: 'white' })
-    mol2.load({ pdbId: '1BTL', background: 'black' })
+    molecule1.load('1tqn')
+    molecule2.load('1btl')
   }, [])
   
   return (
     <div style={{ display: 'flex', gap: 10 }}>
-      <div ref={mol1.ref} style={{ flex: 1, height: 400 }} />
-      <div ref={mol2.ref} style={{ flex: 1, height: 400 }} />
+      <div ref={molecule1.for} style={{ flex: 1, height: 400 }} />
+      <div ref={molecule2.for} style={{ flex: 1, height: 400 }} />
     </div>
   )
 }
@@ -75,95 +86,117 @@ function CompareStructures() {
 
 ## Key Features
 
-### 🎯 **Zero State Management**
-No useState, no useEffect for syncing - the hook reads directly from Molstar's internal state.
+### 🎯 **Global State Management**
+Access the same Molstar instance from any component using the same ID.
 
-### 🎨 **Beautiful by Default**
-Sensible defaults with automatic UI hiding and optimized rendering settings.
+### 🎨 **Modular Hook System**
+Each aspect of visualization has its own specialized hook.
 
 ### 📸 **Screenshot Ready**
-High-resolution screenshots with one line of code.
+High-resolution screenshots with transparency and format options.
 
-### 🔍 **Smart Selection**
-Granular selection control - atoms, residues, chains, or custom selections.
+### 🔍 **Advanced Selection**
+Powerful selection system with visual highlights and focus controls.
 
 ### 🎬 **Cinematic Camera**
 Smooth animations, stereo 3D, and professional camera controls.
 
 ### ⚡ **Performance First**
-Direct Molstar access means no React overhead - as fast as vanilla Molstar.
+Direct Molstar access with minimal React overhead.
 
 ## Common Recipes
 
 ### Light/Dark Mode Toggle
 
 ```tsx
-const [isDark, setIsDark] = useState(false)
+const [theme, setTheme] = useState<'light' | 'dark'>('light')
+const [background, setBackground] = useBackground('viewer-1')
 
-<button onClick={() => {
-  setIsDark(!isDark)
-  setAppearance({ 
-    background: isDark ? 'white' : 'black',
-    postprocessing: { 
-      lighten: isDark ? 0 : 0.1 
-    }
-  })
-}}>
-  Toggle Theme
-</button>
+useEffect(() => {
+  setBackground(theme === 'light' ? '#ffffff' : '#1a1a1a')
+}, [theme])
 ```
 
 ### Focus on Ligand
 
 ```tsx
-await molecule.load({ pdbId: '1AON' })
-molecule.setSelection({ 
-  set: 'ligand',
-  highlight: { color: '#00ff00', style: 'glow' },
-  autoFocus: true 
-})
+const [molecule] = useMolecule('viewer-1')
+const [camera, setCamera] = useCamera('viewer-1')
+
+const focusLigand = async () => {
+  await molecule.focus('ligand')
+  setCamera({ zoom: 1.5 })
+}
 ```
 
 ### Publication Figure
 
 ```tsx
-await molecule.load({ pdbId: '1AON', preset: 'empty' })
-await molecule.setStylePreset('publication')
-await molecule.createComponent('protein', 'cartoon')
-await molecule.createComponent('ligand', 'ball-and-stick')
-await molecule.screenshot({ 
-  resolution: 4,
-  download: true,
-  filename: 'figure.png' 
-})
+const [molecule] = useMolecule('viewer-1')
+const [background, setBackground] = useBackground('viewer-1')
+const [axes, setAxes] = useAxes('viewer-1')
+
+const createFigure = async () => {
+  await molecule.load('1tqn')
+  setBackground('white')
+  setAxes({ visible: false })
+  
+  await molecule.screenshot({ 
+    pixelRatio: 4,
+    download: true,
+    filename: 'figure.png' 
+  })
+}
 ```
 
 ### Animate Between Views
 
 ```tsx
+const [camera, setCamera] = useCamera('viewer-1')
 const views = [
-  { selection: 'protein', label: 'Full Protein' },
-  { selection: 'ligand', label: 'Binding Site' },
-  { selection: 'chain A', label: 'Chain A' }
+  { position: [50, 50, 50], target: [0, 0, 0] },
+  { position: [0, 50, 50], target: [0, 0, 0] },
+  { position: [-50, 50, 50], target: [0, 0, 0] }
 ]
 
-views.forEach((view, i) => {
-  setTimeout(() => {
-    molecule.focus(view.selection)
-    setSelection({ set: view.selection })
-  }, i * 2000)
-})
+const animateViews = () => {
+  views.forEach((view, i) => {
+    setTimeout(() => setCamera(view), i * 2000)
+  })
+}
 ```
 
 ## Architecture
 
-useMolstar follows React best practices:
+The hook system follows React best practices:
 
 1. **Hooks-based** - Composable and reusable
 2. **TypeScript-first** - Full type safety
-3. **Ref-based** - No wrapper components needed
-4. **ID-based** - Multiple instances with unique IDs
-5. **Direct state access** - No prop drilling or context needed
+3. **Global state** - Access from any component
+4. **ID-based** - Multiple independent instances
+5. **Modular** - Use only what you need
+
+## Hook Categories
+
+### Core
+- `useMolstar` - Foundation hook for Molstar instances
+- `useMolecule` - High-level structure loading and control
+
+### Visual
+- `useCamera` - Camera positioning and animation
+- `useBackground` - Background color control
+- `useFog` - Atmospheric fog effects
+- `useStereo` - 3D stereoscopic rendering
+- `useAxes` - 3D orientation axes
+
+### Interaction
+- `useComponents` - Component visibility and styling
+- `useSequence` - Sequence data and residue selection
+- `useScreenshot` - Image capture and export
+- `useViewport` - Resolution and viewport control
+
+### Utility
+- `useEvent` - Cross-component DOM reference sharing
 
 ## Browser Support
 
@@ -171,6 +204,14 @@ useMolstar follows React best practices:
 - Firefox 78+
 - Safari 14+
 - Requires WebGL 2.0
+
+## Performance Tips
+
+1. Use IDs consistently across components
+2. Check `molstar.loaded` before operations
+3. Batch multiple state updates when possible
+4. Use `pixelRatio: 1` for better performance on large displays
+5. Disable unused visual effects (fog, stereo) for speed
 
 ## Contributing
 
