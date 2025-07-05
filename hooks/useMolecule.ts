@@ -30,7 +30,6 @@ import {
   DEFAULT_SHADOW_PARAMS,
   DEFAULT_OUTLINE_PARAMS,
   DEFAULT_FOG_INTENSITY,
-  BACKGROUND_COLOR_MAP,
   STYLE_PRESETS,
   representationMap,
   granularityMap,
@@ -60,11 +59,6 @@ export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['s
     const currentRenderer = molstar.canvas?.props?.renderer || {}
     const newRenderer = { ...currentRenderer, ...renderer }
     setProps({ renderer: newRenderer }, redraw)
-  }
-
-  const setTrackball = (config: any, redraw?: boolean) => {
-    if (!molstar?.loaded) return
-    setProps({ trackball: { ...molstar.canvas.props.trackball, ...config } }, redraw)
   }
 
   const setPostprocessing = (config: any, redraw?: boolean) => {
@@ -240,7 +234,6 @@ export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['s
     }
   }
 
-  // Camera helper functions - now using useCamera hook
   const setCameraAnimation = (animation: 'off' | 'spin' | 'rock') => {
     if (typeof animation === 'undefined') return
     setCamera({
@@ -251,7 +244,6 @@ export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['s
       }
     })
   }
-
 
   const applyQualitySettings = (quality: QualitySettings) => {
     if (!molstar?.loaded) return
@@ -304,50 +296,29 @@ export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['s
     await update.commit()
   }
 
-
-  // Load structure - now delegates to useMolstar's load function
   const load = async (config: LoadConfig) => {
     if (!molstar || !molstar.load) {
       throw new Error('Molstar not available')
     }
 
     try {
-      // Let molstar.load handle all the initialization logic
-      const result = await molstar.load(config)
+      await molstar.load(config)
 
-      // Handle additional configuration after loading
       if (config.hideNativeControls) {
         await hideAllNativeControls()
       }
 
-      if (config.background) {
-        setBackground(config.background)
-      }
-      if (config.lighting) {
-        setIllumination(config.lighting)
-      }
-      if (config.quality) {
-        setQualityLevel(config.quality)
-      }
-      if (config.animate) {
-        setCameraAnimation(config.animate as any)
-      }
-
-      if (config.protein) {
-        await applyRepresentation(molstar, config.protein.style || 'cartoon', config.protein.color || 'chain-id')
-      }
-
-      if (config.autoZoom !== false) {
-        camera.reset?.({ durationMs: 250 })
-      }
+      if (config.background) setBackground(config.background)
+      if (config.lighting) setIllumination(config.lighting)
+      if (config.quality) setQualityLevel(config.quality)
+      if (config.animate) setCameraAnimation(config.animate as any)
+      if (config.protein) await applyRepresentation(molstar, config.protein.style || 'cartoon', config.protein.color || 'chain-id')
+      if (config.autoZoom !== false) camera.reset?.({ durationMs: 250 })
     } catch (error) {
       throw error
     }
   }
 
-  // Screenshot functions delegated to useScreenshot hook
-
-  // Toggle Fullscreen
   const fullscreen = () => {
     if (!molstar?.ref) return
     document.fullscreenElement ? document.exitFullscreen() : molstar.ref.requestFullscreen()
@@ -527,7 +498,6 @@ export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['s
       setCameraAnimation(config.animation)
     }
 
-    // Apply all updates at once
     setCamera(updates)
   }
 
@@ -674,7 +644,6 @@ export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['s
     setStylePreset,
     setRepresentationPreset,
     setRenderer,
-    setTrackball,
     setShadow,
     setFog: (fog: boolean | { enabled: boolean, intensity?: number }) => {
       if (typeof fog === 'undefined') return

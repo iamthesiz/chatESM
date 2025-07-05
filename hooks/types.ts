@@ -28,7 +28,7 @@ export interface LoadConfig {
     style?: string
     color?: string
   }
-  
+
   // UI options
   hideNativeControls?: boolean
 }
@@ -144,7 +144,7 @@ export interface CameraConfig {
   zoom?: number
   projection?: 'perspective' | 'orthographic'
   fov?: number                             // Field of view for perspective
-  
+
   // Camera effects
   clipping?: ClippingSettings
   stereo?: {
@@ -152,10 +152,10 @@ export interface CameraConfig {
     eyeSeparation?: number
     focus?: number
   }
-  
+
   // Animation
   animation?: 'off' | 'spin' | 'rock'
-  
+
   // Visual helpers
   axes?: {
     opacity?: number
@@ -166,7 +166,7 @@ export interface CameraConfig {
       z?: string
     }
   }
-  
+
   // Custom props outside Molstar
   up?: [number, number, number]           // Camera up vector
 }
@@ -329,7 +329,6 @@ export interface UseMolstarReturn {
     setStylePreset?: (preset: 'default' | 'illustrative' | 'publication' | 'performance') => Promise<void>
     setRepresentationPreset?: (preset: 'default' | 'cartoon' | 'spacefill' | 'surface') => Promise<void>
     setRenderer?: (renderer: any, redraw?: boolean) => void
-    setTrackball?: (config: any, redraw?: boolean) => void
     setShadow?: (shadow: { on: boolean, params?: any }, redraw?: boolean) => void
     setFog?: (fog: boolean | { enabled: boolean, intensity?: number }) => void
     setBackground?: (background: string, lighten?: number, darken?: number) => void
