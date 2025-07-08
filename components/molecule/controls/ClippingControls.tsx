@@ -17,10 +17,7 @@ export const ClippingControls: FC = () => {
         min="0"
         max="99"
         value={clipping.radius}
-        onChange={(e) => {
-          const value = parseInt(e.target.value)
-          setClipping({ radius: value })
-        }}
+        onChange={(e) => setClipping({ radius: parseInt(e.target.value) })}
       />
 
       {clipping.radius > 0 && (
@@ -31,9 +28,7 @@ export const ClippingControls: FC = () => {
               <input
                 type="checkbox"
                 checked={clipping.clipFar}
-                onChange={(e) => {
-                  setClipping({ clipFar: e.target.checked })
-                }}
+                onChange={(e) => setClipping({ clipFar: e.target.checked })}
               />
               <span></span>
             </ToggleSwitch>
@@ -49,10 +44,7 @@ export const ClippingControls: FC = () => {
             max="100"
             step="0.1"
             value={clipping.minNear}
-            onChange={(e) => {
-              const value = parseFloat(e.target.value)
-              setClipping({ minNear: value })
-            }}
+            onChange={(e) => setClipping({ minNear: parseFloat(e.target.value) })}
           />
         </>
       )}

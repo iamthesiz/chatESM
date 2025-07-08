@@ -60,6 +60,8 @@ export interface MoleculeInstance {
   background?: string
   lighting?: string
   quality?: { level: 'high' | 'medium' | 'low' }
+  representationPreset?: string
+  stylePreset?: string
 
   // Loading
   load: (config: LoadConfig) => Promise<void>

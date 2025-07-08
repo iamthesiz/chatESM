@@ -21,17 +21,13 @@ export const CameraSettingsControls: FC = () => {
       <ButtonGroup>
         <SmallButton
           isActive={camera.mode === 'perspective'}
-          onClick={() => {
-            setCamera({ mode: 'perspective' })
-          }}
+          onClick={() => setCamera({ mode: 'perspective' })}
         >
           Perspective
         </SmallButton>
         <SmallButton
           isActive={camera.mode === 'orthographic'}
-          onClick={() => {
-            setCamera({ mode: 'orthographic' })
-          }}
+          onClick={() => setCamera({ mode: 'orthographic' })}
         >
           Orthographic
         </SmallButton>
@@ -51,16 +47,9 @@ export const CameraSettingsControls: FC = () => {
           max="130"
           step="1"
           value={camera.fov}
-          onChange={(e) => {
-            const value = parseInt(e.target.value)
-            setCamera({ fov: value })
-          }}
+          onChange={(e) => setCamera({ fov: parseInt(e.target.value) })}
         />
-        <Rotate
-          onClick={() => {
-            setCamera({ fov: 45 })
-          }}
-        >
+        <Rotate onClick={() => setCamera({ fov: 45 })}>
           <ResetButton title="Reset field of view">
             <FiRefreshCw />
           </ResetButton>

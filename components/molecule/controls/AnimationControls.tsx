@@ -1,43 +1,33 @@
 /** @jsxImportSource @emotion/react */
-import { FC, useState } from 'react'
+import { FC } from 'react'
 import { useCamera } from '../../../hooks/useCamera'
 import { SliderLabel, ButtonGroup, SmallButton } from './styled'
 
 export const AnimationControls: FC = () => {
-  const [, setCamera] = useCamera()
-  const [animationType, setAnimationType] = useState<'off' | 'spin' | 'rock'>('off')
+  const [{ animation }, setCamera] = useCamera()
 
   return (
     <>
       <SliderLabel>
         <span>Animation</span>
-        <span>{animationType === 'off' ? 'Off' : animationType.charAt(0).toUpperCase() + animationType.slice(1)}</span>
+        <span>{animation.type === 'off' ? 'Off' : animation.type.charAt(0).toUpperCase() + animation.type.slice(1)}</span>
       </SliderLabel>
       <ButtonGroup>
         <SmallButton
-          isActive={animationType === 'off'}
-          onClick={() => {
-            setAnimationType('off')
-            setCamera({ animation: 'off' })
-          }}
+          isActive={animation.type === 'off'}
+          onClick={() => setCamera({ animation: 'off' })}
         >
           Off
         </SmallButton>
         <SmallButton
-          isActive={animationType === 'spin'}
-          onClick={() => {
-            setAnimationType('spin')
-            setCamera({ animation: 'spin' })
-          }}
+          isActive={animation.type === 'spin'}
+          onClick={() => setCamera({ animation: 'spin' })}
         >
           Spin
         </SmallButton>
         <SmallButton
-          isActive={animationType === 'rock'}
-          onClick={() => {
-            setAnimationType('rock')
-            setCamera({ animation: 'rock' })
-          }}
+          isActive={animation.type === 'rock'}
+          onClick={() => setCamera({ animation: 'rock' })}
         >
           Rock
         </SmallButton>

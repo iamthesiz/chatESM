@@ -3,14 +3,11 @@ import { FC, useState } from 'react'
 import styled from '@emotion/styled'
 import { useMolecule } from '../../../hooks/useMolecule'
 
-interface QuickStylesControlsProps {
-  id?: string
-}
+export const QuickStylesControls: FC = () => {
+  const [molecule, { setStylePreset, setRepresentationPreset }] = useMolecule()
 
-export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
-  const [, { setStylePreset, setRepresentationPreset }] = useMolecule(id)
-  const [selectedRepresentation, setSelectedRepresentation] = useState('default')
-  const [selectedStylePreset, setSelectedStylePreset] = useState('default')
+  const selectedRepresentation = molecule.representationPreset
+  const selectedStylePreset = molecule.stylePreset
 
   return (
     <>
@@ -18,7 +15,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
       <ButtonGroup>
         <Button
           onClick={async () => {
-            setSelectedRepresentation('default')
             await setRepresentationPreset('default')
           }}
           style={{
@@ -30,7 +26,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
         </Button>
         <Button
           onClick={async () => {
-            setSelectedRepresentation('cartoon')
             await setRepresentationPreset('cartoon')
           }}
           style={{
@@ -42,7 +37,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
         </Button>
         <Button
           onClick={async () => {
-            setSelectedRepresentation('spacefill')
             await setRepresentationPreset('spacefill')
           }}
           style={{
@@ -54,7 +48,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
         </Button>
         <Button
           onClick={async () => {
-            setSelectedRepresentation('surface')
             await setRepresentationPreset('surface')
           }}
           style={{
@@ -70,7 +63,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
       <ButtonGroup>
         <Button
           onClick={async () => {
-            setSelectedStylePreset('default')
             await setStylePreset('default')
           }}
           style={{
@@ -82,7 +74,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
         </Button>
         <Button
           onClick={async () => {
-            setSelectedStylePreset('illustrative')
             await setStylePreset('illustrative')
           }}
           style={{
@@ -94,7 +85,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
         </Button>
         <Button
           onClick={async () => {
-            setSelectedStylePreset('publication')
             await setStylePreset('publication')
           }}
           style={{
@@ -106,7 +96,6 @@ export const QuickStylesControls: FC<QuickStylesControlsProps> = ({ id }) => {
         </Button>
         <Button
           onClick={async () => {
-            setSelectedStylePreset('performance')
             await setStylePreset('performance')
           }}
           style={{

@@ -8,15 +8,11 @@ const FaPlus = FaIcons.FaPlus as any
 import styled from '@emotion/styled'
 import { useState } from 'react'
 import { useComponents } from '../../hooks/useComponents'
-import { DEFAULT_MOLSTAR_ID } from '../../hooks/constants'
+import { useToggles, useVerbs, Noun } from 'toggles'
 
-interface ComponentsPanelProps {
-  id?: string
-}
-
-export function ComponentsPanel({ id = DEFAULT_MOLSTAR_ID }: ComponentsPanelProps) {
-  const [components, manager] = useComponents(id)
-  const [showAddDialog, setShowAddDialog] = useState(false)
+export function ComponentsPanel() {
+  const [components, manager] = useComponents()
+  const [{ addDialog }, { open, toggle, close }] = useToggles(false)
 
   if (manager.loading) {
     return (
@@ -31,7 +27,7 @@ export function ComponentsPanel({ id = DEFAULT_MOLSTAR_ID }: ComponentsPanelProp
       <Container>
         <EmptyMessage>
           <p>No components found</p>
-          <AddButton onClick={() => setShowAddDialog(true)}>
+          <AddButton onClick={() => open(addDialog)}>
             <FaPlus /> Add Component
           </AddButton>
         </EmptyMessage>
@@ -43,7 +39,7 @@ export function ComponentsPanel({ id = DEFAULT_MOLSTAR_ID }: ComponentsPanelProp
     <Container>
       <Header>
         <Title>Components ({components.length})</Title>
-        <HeaderButton onClick={() => setShowAddDialog(true)} title="Add component">
+        <HeaderButton onClick={() => open(addDialog)} title="Add component">
           <FaPlus />
         </HeaderButton>
       </Header>
@@ -58,7 +54,7 @@ export function ComponentsPanel({ id = DEFAULT_MOLSTAR_ID }: ComponentsPanelProp
                 <RepresentationType>{component.representation}</RepresentationType>
               </ComponentDetails>
             </ComponentInfo>
-            
+
             <ComponentActions>
               <ActionButton
                 onClick={() => manager.toggle(component)}
@@ -91,17 +87,18 @@ export function ComponentsPanel({ id = DEFAULT_MOLSTAR_ID }: ComponentsPanelProp
         </ActionBarButton>
       </ActionBar>
 
-      {showAddDialog && (
-        <AddComponentDialog onClose={() => setShowAddDialog(false)} manager={manager} />
+      {addDialog.isOpen && (
+        <AddComponentDialog addDialog={addDialog} manager={manager} />
       )}
     </Container>
   )
 }
 
-function AddComponentDialog({ onClose, manager }: { onClose: () => void; manager: any }) {
+function AddComponentDialog({ addDialog, manager }: { addDialog: Noun; manager: any }) {
   const [selection, setSelection] = useState('polymer')
   const [representation, setRepresentation] = useState('cartoon')
   const [label, setLabel] = useState('')
+  const { close } = useVerbs()
 
   const handleAdd = async () => {
     try {
@@ -110,7 +107,7 @@ function AddComponentDialog({ onClose, manager }: { onClose: () => void; manager
         representation,
         label: label || `${selection} (${representation})`
       })
-      onClose()
+      close(addDialog)
     } catch (error) {
       console.error('Failed to add component:', error)
     }
@@ -123,7 +120,7 @@ function AddComponentDialog({ onClose, manager }: { onClose: () => void; manager
           <h3>Add Component</h3>
           <CloseButton onClick={onClose}>×</CloseButton>
         </DialogHeader>
-        
+
         <DialogBody>
           <FormGroup>
             <Label>Selection</Label>
@@ -306,9 +303,9 @@ const ActionButton = styled.button<{ isActive?: boolean; variant?: string }>`
   
   &:hover {
     background: ${props => {
-      if (props.variant === 'danger') return '#fef2f2';
-      return props.isActive ? '#3a3a3c' : '#f7f7f8';
-    }};
+    if (props.variant === 'danger') return '#fef2f2';
+    return props.isActive ? '#3a3a3c' : '#f7f7f8';
+  }};
   }
   
   svg {

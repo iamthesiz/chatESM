@@ -1,6 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import { FC, useState } from 'react'
 import { useMolecule } from '../../../hooks/useMolecule'
+import { useToggles } from 'toggles'
 import { ControlGroup, Label, ToggleSwitch, Slider, SliderLabel } from './styled'
 import { OcclusionControls } from './OcclusionControls'
 import { FogControls } from './FogControls'
@@ -9,8 +10,7 @@ import { AnimationControls } from './AnimationControls'
 
 export const VisualEffectsControls: FC = () => {
   const [, { setAppearance, setQuality }] = useMolecule()
-  const [shadowsEnabled, setShadowsEnabled] = useState(false)
-  const [outlineEnabled, setOutlineEnabled] = useState(false)
+  const [{ shadows, outline }, { toggle }] = useToggles(false, false)
   const [outlineScale, setOutlineScale] = useState(1)
 
   return (
@@ -24,9 +24,9 @@ export const VisualEffectsControls: FC = () => {
         <ToggleSwitch>
           <input
             type="checkbox"
-            checked={shadowsEnabled}
+            checked={shadows.isOn}
             onChange={(e) => {
-              setShadowsEnabled(e.target.checked)
+              toggle(shadows)
               setAppearance({
                 shadows: e.target.checked
               })
@@ -41,9 +41,9 @@ export const VisualEffectsControls: FC = () => {
         <ToggleSwitch>
           <input
             type="checkbox"
-            checked={outlineEnabled}
+            checked={outline.isOn}
             onChange={(e) => {
-              setOutlineEnabled(e.target.checked)
+              toggle(outline)
               setQuality({
                 postprocessing: {
                   outline: {
@@ -58,7 +58,7 @@ export const VisualEffectsControls: FC = () => {
         </ToggleSwitch>
       </SliderLabel>
 
-      {outlineEnabled && (
+      {outline.isOn && (
         <>
           <SliderLabel>
             <span>Outline Scale</span>

@@ -11,10 +11,7 @@ export const SelectionModeControls: FC = () => {
       <Label>Selection Mode</Label>
       <SelectDropdown
         value={molecule.granularity || 'residue'}
-        onChange={(e) => {
-          const mode = e.target.value
-          setGranularity(mode)
-        }}
+        onChange={(e) => setGranularity(e.target.value)}
       >
         <option value="atom">Atom/Coarse Element</option>
         <option value="residue">Residue</option>

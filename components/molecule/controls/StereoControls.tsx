@@ -16,9 +16,7 @@ export const StereoControls: FC = () => {
           <input
             type="checkbox"
             checked={stereo.enabled}
-            onChange={(e) => {
-              setStereo({ enabled: e.target.checked })
-            }}
+            onChange={(e) => setStereo({ enabled: e.target.checked })}
           />
           <span></span>
         </ToggleSwitch>
@@ -37,15 +35,10 @@ export const StereoControls: FC = () => {
               max="0.1"
               step="0.003"
               value={stereo.eyeSeparation}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value)
-                setStereo({ eyeSeparation: value })
-              }}
+              onChange={(e) => setStereo({ eyeSeparation: parseFloat(e.target.value) })}
             />
             <Rotate
-              onClick={() => {
-                setStereo({ eyeSeparation: 0.064 })
-              }}
+              onClick={() => setStereo({ eyeSeparation: 0.064 })}
             >
               <ResetButton title="Reset eye separation">
                 <FiRefreshCw />
@@ -64,16 +57,9 @@ export const StereoControls: FC = () => {
               max="20"
               step="0.3"
               value={stereo.focus}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value)
-                setStereo({ focus: value })
-              }}
+              onChange={(e) => setStereo({ focus: parseFloat(e.target.value) })}
             />
-            <Rotate
-              onClick={() => {
-                setStereo({ focus: 10 })
-              }}
-            >
+            <Rotate onClick={() => setStereo({ focus: 10 })}>
               <ResetButton title="Reset stereo focus">
                 <FiRefreshCw />
               </ResetButton>

@@ -14,9 +14,7 @@ export const FogControls: FC = () => {
           <input
             type="checkbox"
             checked={fog.enabled}
-            onChange={(e) => {
-              setFog({ enabled: e.target.checked })
-            }}
+            onChange={(e) => setFog({ enabled: e.target.checked })}
           />
           <span></span>
         </ToggleSwitch>
@@ -33,10 +31,7 @@ export const FogControls: FC = () => {
             min="1"
             max="100"
             value={fog.intensity}
-            onChange={(e) => {
-              const value = parseInt(e.target.value)
-              setFog({ intensity: value })
-            }}
+            onChange={(e) => setFog({ intensity: parseInt(e.target.value) })}
           />
         </>
       )}

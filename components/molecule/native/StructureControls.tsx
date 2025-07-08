@@ -6,51 +6,35 @@ import { MdLayers } from 'react-icons/md'
 import { BiShapePolygon } from 'react-icons/bi'
 import { IconButtonWithTooltip } from '../IconButtonWithTooltip'
 
-interface StructureControlsProps {
-  id?: string
-}
-
-export const StructureControls: FC<StructureControlsProps> = ({ id }) => {
+export const StructureControls: FC = () => {
   return (
     <StructureItem>
       <PresetButtons>
         <IconButtonWithTooltip
           id="preset-default"
           title="Default (Assembly)"
-          onClick={() => {
-            navigator.clipboard.writeText('Default (Assembly)')
-            console.log('Default')
-          }}
+          onClick={() => navigator.clipboard.writeText('Default (Assembly)')}
         >
           <FaCube />
         </IconButtonWithTooltip>
         <IconButtonWithTooltip
           id="preset-unit-cell"
           title="Unit Cell"
-          onClick={() => {
-            navigator.clipboard.writeText('Unit Cell')
-            console.log('Unit Cell')
-          }}
+          onClick={() => navigator.clipboard.writeText('Unit Cell')}
         >
           <BiShapePolygon />
         </IconButtonWithTooltip>
         <IconButtonWithTooltip
           id="preset-super-cell"
           title="Super Cell"
-          onClick={() => {
-            navigator.clipboard.writeText('Super Cell')
-            console.log('Super Cell')
-          }}
+          onClick={() => navigator.clipboard.writeText('Super Cell')}
         >
           <FaLayerGroup />
         </IconButtonWithTooltip>
         <IconButtonWithTooltip
           id="preset-crystal-contacts"
           title="Crystal Contacts"
-          onClick={() => {
-            navigator.clipboard.writeText('Crystal Contacts')
-            console.log('Crystal Contacts')
-          }}
+          onClick={() => navigator.clipboard.writeText('Crystal Contacts')}
         >
           <MdLayers />
         </IconButtonWithTooltip>

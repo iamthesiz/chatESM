@@ -16,9 +16,7 @@ export const AxesControls: FC = () => {
           <input
             type="checkbox"
             checked={axes.visible}
-            onChange={(e) => {
-              setAxes({ visible: e.target.checked })
-            }}
+            onChange={(e) => setAxes({ visible: e.target.checked })}
           />
           <span></span>
         </ToggleSwitch>
@@ -37,15 +35,10 @@ export const AxesControls: FC = () => {
               max="1"
               step="0.1"
               value={axes.opacity}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value)
-                setAxes({ opacity: value })
-              }}
+              onChange={(e) => setAxes({ opacity: parseFloat(e.target.value) })}
             />
             <Rotate
-              onClick={() => {
-                setAxes({ opacity: 0.51 })
-              }}
+              onClick={() => setAxes({ opacity: 0.51 })}
             >
               <ResetButton title="Reset axes opacity">
                 <FiRefreshCw />
@@ -64,16 +57,9 @@ export const AxesControls: FC = () => {
               max="2.5"
               step="0.1"
               value={axes.scale}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value)
-                setAxes({ scale: value })
-              }}
+              onChange={(e) => setAxes({ scale: parseFloat(e.target.value) })}
             />
-            <Rotate
-              onClick={() => {
-                setAxes({ scale: 0.33 })
-              }}
-            >
+            <Rotate onClick={() => setAxes({ scale: 0.33 })}>
               <ResetButton title="Reset axes scale">
                 <FiRefreshCw />
               </ResetButton>
@@ -88,25 +74,19 @@ export const AxesControls: FC = () => {
             <ColorPickerInput
               type="color"
               value={axes.x}
-              onChange={(e) => {
-                setAxes({ x: e.target.value })
-              }}
+              onChange={(e) => setAxes({ x: e.target.value })}
             />
             <span style={{ fontSize: '0.625rem', width: '20px' }}>Y:</span>
             <ColorPickerInput
               type="color"
               value={axes.y}
-              onChange={(e) => {
-                setAxes({ y: e.target.value })
-              }}
+              onChange={(e) => setAxes({ y: e.target.value })}
             />
             <span style={{ fontSize: '0.625rem', width: '20px' }}>Z:</span>
             <ColorPickerInput
               type="color"
               value={axes.z}
-              onChange={(e) => {
-                setAxes({ z: e.target.value })
-              }}
+              onChange={(e) => setAxes({ z: e.target.value })}
             />
           </div>
           <div style={{ fontSize: '0.625rem', color: '#8e8ea0', marginBottom: '0.5rem' }}>

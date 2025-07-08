@@ -615,6 +615,45 @@ export function useMolecule(id: string = DEFAULT_MOLSTAR_ID): [MoleculeInstance,
         const level: 'high' | 'medium' | 'low' = mode === 'off' ? 'low' : sampleLevel >= 4 ? 'high' : 'medium'
         return { level }
       },
+      get representationPreset(): string {
+        if (!molstar?.loaded) return 'default'
+        
+        // Try to find the first protein representation
+        const representations = molstar.state?.data?.selectQ((q: any) =>
+          q.ofType(PluginStateObject.Molecule.Structure.Representation3D)
+        )
+        
+        if (representations?.length > 0) {
+          const repr = representations[0]?.obj?.data?.repr?.props?.type?.name
+          // Map Molstar representation names to our preset names
+          const reprMap: Record<string, string> = {
+            'cartoon': 'cartoon',
+            'spacefill': 'spacefill',
+            'molecular-surface': 'surface',
+            'ball-and-stick': 'default'
+          }
+          return reprMap[repr] || 'default'
+        }
+        return 'default'
+      },
+      get stylePreset(): string {
+        if (!molstar?.loaded) return 'default'
+        
+        const renderer = molstar.canvas?.props?.renderer
+        if (!renderer) return 'default'
+        
+        // Check for illustrative style
+        if (renderer.style?.name === 'illustrative') return 'illustrative'
+        
+        // Check for performance style (lower quality settings)
+        const multiSample = molstar.canvas?.props?.multiSample
+        if (multiSample?.mode === 'off') return 'performance'
+        
+        // Check for publication style (high quality + specific settings)
+        if (multiSample?.sampleLevel >= 4 && renderer.style?.quality === 'high') return 'publication'
+        
+        return 'default'
+      },
       load,
       screenshot,
       copyScreenshot,

@@ -4,11 +4,12 @@ import { FC, useState } from 'react'
 import { FiRefreshCw } from 'react-icons/fi'
 import Rotate from '../../Rotate'
 import { useMolecule } from '../../../hooks/useMolecule'
+import { useToggles } from 'toggles'
 import { ToggleSwitch, Slider, SliderLabel, SliderRow, ResetButton, ColorPicker } from './styled'
 
 export const OcclusionControls: FC = () => {
   const [, { setQuality }] = useMolecule()
-  const [occlusionEnabled, setOcclusionEnabled] = useState(false)
+  const [{ occlusionToggle }, { toggle }] = useToggles(false)
   const [occlusionSettings, setOcclusionSettings] = useState({
     samples: 32,
     multiScale: {
@@ -38,9 +39,9 @@ export const OcclusionControls: FC = () => {
         <ToggleSwitch>
           <input
             type="checkbox"
-            checked={occlusionEnabled}
+            checked={occlusionToggle.isOn}
             onChange={(e) => {
-              setOcclusionEnabled(e.target.checked)
+              toggle(occlusionToggle)
               setQuality({
                 occlusion: e.target.checked ? {
                   enabled: true,
@@ -53,7 +54,7 @@ export const OcclusionControls: FC = () => {
         </ToggleSwitch>
       </SliderLabel>
 
-      {occlusionEnabled && (
+      {occlusionToggle.isOn && (
         <>
           <SliderLabel>
             <span>Samples</span>
