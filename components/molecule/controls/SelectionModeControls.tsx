@@ -3,12 +3,8 @@ import { FC } from 'react'
 import { useMolecule } from '../../../hooks/useMolecule'
 import { ControlGroup, Label, SelectDropdown } from './styled'
 
-interface SelectionModeControlsProps {
-  id?: string
-}
-
-export const SelectionModeControls: FC<SelectionModeControlsProps> = ({ id }) => {
-  const [molecule, { setGranularity }] = useMolecule(id)
+export const SelectionModeControls: FC = () => {
+  const [molecule, { setGranularity }] = useMolecule()
 
   return (
     <ControlGroup>

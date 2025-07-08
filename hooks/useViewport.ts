@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMolstar } from './useMolstar'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface ViewportState {
   width: number
@@ -21,7 +22,7 @@ export interface ViewportConfig {
 
 type SetViewport = (config: ViewportConfig | ((prev: ViewportState) => ViewportConfig)) => void
 
-export function useViewport(id?: string): [ViewportState, SetViewport] {
+export function useViewport(id: string = DEFAULT_MOLSTAR_ID): [ViewportState, SetViewport] {
   const molstar = useMolstar(id)
   
   // Default viewport state

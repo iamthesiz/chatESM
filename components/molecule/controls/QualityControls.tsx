@@ -3,12 +3,8 @@ import { FC } from 'react'
 import { useMolecule } from '../../../hooks/useMolecule'
 import { ControlGroup, Label, ButtonGroup, SmallButton } from './styled'
 
-interface QualityControlsProps {
-  id?: string
-}
-
-export const QualityControls: FC<QualityControlsProps> = ({ id }) => {
-  const [molecule, { setQuality }] = useMolecule(id)
+export const QualityControls: FC = () => {
+  const [molecule, { setQuality }] = useMolecule()
   const activeQuality = molecule.quality?.level || 'medium'
 
   return (

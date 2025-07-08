@@ -6,12 +6,8 @@ import Rotate from '../../Rotate'
 import { useMolecule } from '../../../hooks/useMolecule'
 import { ToggleSwitch, Slider, SliderLabel, SliderRow, ResetButton, ColorPicker } from './styled'
 
-interface OcclusionControlsProps {
-  id?: string
-}
-
-export const OcclusionControls: FC<OcclusionControlsProps> = ({ id }) => {
-  const [, { setQuality }] = useMolecule(id)
+export const OcclusionControls: FC = () => {
+  const [, { setQuality }] = useMolecule()
   const [occlusionEnabled, setOcclusionEnabled] = useState(false)
   const [occlusionSettings, setOcclusionSettings] = useState({
     samples: 32,

@@ -11,11 +11,10 @@ import { SelectionModeControls } from './controls/SelectionModeControls'
 import { CameraSettingsControls } from './controls/CameraSettingsControls'
 
 interface Props {
-  id?: string
   controlsPanel: Noun
 }
 
-export const SettingsAndControlsPanel: FC<Props> = ({ id, controlsPanel }) => {
+export const SettingsAndControlsPanel: FC<Props> = ({ controlsPanel }) => {
   const { close } = useVerbs()
 
   return (
@@ -25,12 +24,12 @@ export const SettingsAndControlsPanel: FC<Props> = ({ id, controlsPanel }) => {
         <CloseButton onClick={() => close(controlsPanel)}><FiX size={20} /></CloseButton>
       </PanelHeader>
       <PanelContent>
-        <CameraControls id={id} />
-        <BackgroundControls id={id} />
-        <VisualEffectsControls id={id} />
-        <QualityControls id={id} />
-        <SelectionModeControls id={id} />
-        <CameraSettingsControls id={id} />
+        <CameraControls />
+        <BackgroundControls />
+        <VisualEffectsControls />
+        <QualityControls />
+        <SelectionModeControls />
+        <CameraSettingsControls />
       </PanelContent>
     </Panel>
   )

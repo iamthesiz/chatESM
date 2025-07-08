@@ -5,12 +5,8 @@ import Rotate from '../../Rotate'
 import { useAxes } from '../../../hooks/useAxes'
 import { ToggleSwitch, Slider, SliderLabel, SliderRow, ResetButton, ColorPickerInput } from './styled'
 
-interface AxesControlsProps {
-  id?: string
-}
-
-export const AxesControls: FC<AxesControlsProps> = ({ id }) => {
-  const [axes, setAxes] = useAxes(id)
+export const AxesControls: FC = () => {
+  const [axes, setAxes] = useAxes()
 
   return (
     <>

@@ -3,6 +3,7 @@ import { useMolstar } from './useMolstar'
 import { determineComponentType, extractRepresentationType, repTypeMap, REPRESENTATION_PRESETS } from '../utils/molstar-selections'
 import { PresetStructureRepresentations } from 'molstar/lib/mol-plugin-state/builder/structure/representation-preset'
 import { sleep } from '../utils'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface Component {
   type: string          // 'protein', 'ligand', 'water', 'ion', 'nucleic', or 'custom'
@@ -49,7 +50,7 @@ interface ComponentsManager {
   clear: () => Promise<void>
 }
 
-export function useComponents(id: string): [components: Component[], manager: ComponentsManager] {
+export function useComponents(id: string = DEFAULT_MOLSTAR_ID): [components: Component[], manager: ComponentsManager] {
   const molstar = useMolstar(id, 'useComponents')
   const componentList = useRef<Component[]>([])
   const [loading, setLoading] = useState(true)

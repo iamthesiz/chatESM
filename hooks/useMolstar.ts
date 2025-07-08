@@ -6,6 +6,7 @@ import useIdEffect from './useIdEffect'
 import { useEvent } from './useEvent'
 import { getStructureSource, sleep, isPdbId, isUrl } from '../utils'
 import { molstarStateAtomFamily } from './atoms'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 import 'molstar/lib/mol-plugin-ui/skin/light.scss'
 
 interface LoadOptions {
@@ -16,11 +17,11 @@ interface LoadOptions {
 
 /**
  * Hook to access the shared Molstar instance
- * @param id - The ID of the Molstar instance, or a PDB ID/URL to auto-load
+ * @param id - The ID of the Molstar instance, or a PDB ID/URL to auto-load (defaults to DEFAULT_MOLSTAR_ID)
  * @param typeId - Optional type identifier for debugging
  * @returns Object with molstar instance and loading state
  */
-export function useMolstar(id: string, _typeId?: string) {
+export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
   const container = useEvent<HTMLDivElement>(id)
   const [state, setState] = useAtom(molstarStateAtomFamily(id))
   const hasAutoLoaded = useRef(false)

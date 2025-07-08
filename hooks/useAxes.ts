@@ -1,6 +1,7 @@
 import { useMolstar } from './useMolstar'
 import { useEffect, useState } from 'react'
 import { hexToColor, colorToHex } from '../utils'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface AxesState {
   visible: boolean
@@ -64,7 +65,7 @@ export interface AxesConfig {
 
 type SetAxes = (config: AxesConfig | ((prev: AxesState) => AxesConfig)) => void
 
-export function useAxes(id?: string): [AxesState, SetAxes] {
+export function useAxes(id: string = DEFAULT_MOLSTAR_ID): [AxesState, SetAxes] {
   const molstar = useMolstar(id)
 
   // Default axes state - values from Molstar's AxesParams

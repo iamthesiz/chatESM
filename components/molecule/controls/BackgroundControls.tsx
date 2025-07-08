@@ -5,12 +5,8 @@ import { FiRefreshCw } from 'react-icons/fi'
 import Rotate from '../../Rotate'
 import { useMolecule } from '../../../hooks/useMolecule'
 
-interface BackgroundControlsProps {
-  id?: string
-}
-
-export const BackgroundControls: FC<BackgroundControlsProps> = ({ id }) => {
-  const [molecule, { setAppearance }] = useMolecule(id)
+export const BackgroundControls: FC = () => {
+  const [molecule, { setAppearance }] = useMolecule()
   const [brightnessAdjust, setBrightnessAdjust] = useState(0)
 
   return (

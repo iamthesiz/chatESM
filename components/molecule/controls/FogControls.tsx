@@ -4,12 +4,8 @@ import { FC } from 'react'
 import { useFog } from '../../../hooks/useFog'
 import { ToggleSwitch, Slider, SliderLabel } from './styled'
 
-interface FogControlsProps {
-  id?: string
-}
-
-export const FogControls: FC<FogControlsProps> = ({ id }) => {
-  const [fog, setFog] = useFog(id)
+export const FogControls: FC = () => {
+  const [fog, setFog] = useFog()
   return (
     <>
       <SliderLabel>

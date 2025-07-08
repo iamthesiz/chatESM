@@ -3,12 +3,8 @@ import { FC } from 'react'
 import { useClipping } from '../../../hooks/useClipping'
 import { ToggleSwitch, Slider, SliderLabel } from './styled'
 
-interface ClippingControlsProps {
-  id?: string
-}
-
-export const ClippingControls: FC<ClippingControlsProps> = ({ id }) => {
-  const [clipping, setClipping] = useClipping(id)
+export const ClippingControls: FC = () => {
+  const [clipping, setClipping] = useClipping()
 
   return (
     <>

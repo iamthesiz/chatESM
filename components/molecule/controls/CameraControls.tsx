@@ -3,12 +3,8 @@ import styled from '@emotion/styled'
 import { FC } from 'react'
 import { useMolecule } from '../../../hooks/useMolecule'
 
-interface CameraControlsProps {
-  id?: string
-}
-
-export const CameraControls: FC<CameraControlsProps> = ({ id }) => {
-  const [molecule] = useMolecule(id)
+export const CameraControls: FC = () => {
+  const [molecule] = useMolecule()
   return (
     <ControlGroup>
       <Label>Camera Controls</Label>

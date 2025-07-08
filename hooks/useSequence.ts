@@ -3,6 +3,7 @@ import { useMolstar } from './useMolstar'
 import { StructureElement } from 'molstar/lib/mol-model/structure'
 import { SortedArray } from 'molstar/lib/mol-data/int'
 import { sleep } from '../utils'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 export interface Residue {
   index: number
   code: string      // One-letter code (A, C, G, T, etc.)
@@ -49,7 +50,7 @@ export type SetSequence = (update: Partial<Omit<SequenceState, 'loading' | 'stru
   residues?: Residue[]
 }) => void
 
-export function useSequence(id: string): [SequenceState, SetSequence] {
+export function useSequence(id: string = DEFAULT_MOLSTAR_ID): [SequenceState, SetSequence] {
   const molstar = useMolstar(id, 'useSequence')
   const [state, setState] = useState<SequenceState>({
     loading: true,

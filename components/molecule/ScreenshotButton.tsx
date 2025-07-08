@@ -7,13 +7,9 @@ import useToggles from 'toggles'
 import type { FC } from 'react'
 import { sleep } from '../../utils'
 
-interface ScreenshotButtonProps {
-  id?: string
-}
-
-export const ScreenshotButton: FC<ScreenshotButtonProps> = ({ id }) => {
-  const [molecule] = useMolecule(id)
-  const [axes, setAxes] = useAxes(id)
+export const ScreenshotButton: FC = () => {
+  const [molecule] = useMolecule()
+  const [axes, setAxes] = useAxes()
   const [{ dropdown, transparent, copied }, { toggle, close }] = useToggles(false, false, false)
   const [format, setFormat] = useState<'png' | 'jpeg' | 'webp'>('png')
   const [preview, setPreview] = useState<string | null>(null)

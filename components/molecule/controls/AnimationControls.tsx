@@ -1,14 +1,10 @@
 /** @jsxImportSource @emotion/react */
 import { FC, useState } from 'react'
-import { useMolecule } from '../../../hooks/useMolecule'
+import { useCamera } from '../../../hooks/useCamera'
 import { SliderLabel, ButtonGroup, SmallButton } from './styled'
 
-interface AnimationControlsProps {
-  id?: string
-}
-
-export const AnimationControls: FC<AnimationControlsProps> = ({ id }) => {
-  const [, { setCamera }] = useMolecule(id)
+export const AnimationControls: FC = () => {
+  const [, setCamera] = useCamera()
   const [animationType, setAnimationType] = useState<'off' | 'spin' | 'rock'>('off')
 
   return (
@@ -22,9 +18,7 @@ export const AnimationControls: FC<AnimationControlsProps> = ({ id }) => {
           isActive={animationType === 'off'}
           onClick={() => {
             setAnimationType('off')
-            setCamera({
-              animation: 'off'
-            })
+            setCamera({ animation: 'off' })
           }}
         >
           Off
@@ -33,9 +27,7 @@ export const AnimationControls: FC<AnimationControlsProps> = ({ id }) => {
           isActive={animationType === 'spin'}
           onClick={() => {
             setAnimationType('spin')
-            setCamera({
-              animation: 'spin'
-            })
+            setCamera({ animation: 'spin' })
           }}
         >
           Spin
@@ -44,9 +36,7 @@ export const AnimationControls: FC<AnimationControlsProps> = ({ id }) => {
           isActive={animationType === 'rock'}
           onClick={() => {
             setAnimationType('rock')
-            setCamera({
-              animation: 'rock'
-            })
+            setCamera({ animation: 'rock' })
           }}
         >
           Rock

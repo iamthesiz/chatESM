@@ -7,12 +7,8 @@ import { FogControls } from './FogControls'
 import { ClippingControls } from './ClippingControls'
 import { AnimationControls } from './AnimationControls'
 
-interface VisualEffectsControlsProps {
-  id?: string
-}
-
-export const VisualEffectsControls: FC<VisualEffectsControlsProps> = ({ id }) => {
-  const [, { setAppearance, setQuality }] = useMolecule(id)
+export const VisualEffectsControls: FC = () => {
+  const [, { setAppearance, setQuality }] = useMolecule()
   const [shadowsEnabled, setShadowsEnabled] = useState(false)
   const [outlineEnabled, setOutlineEnabled] = useState(false)
   const [outlineScale, setOutlineScale] = useState(1)
@@ -21,7 +17,7 @@ export const VisualEffectsControls: FC<VisualEffectsControlsProps> = ({ id }) =>
     <ControlGroup>
       <Label>Visual Effects</Label>
 
-      <OcclusionControls id={id} />
+      <OcclusionControls />
 
       <SliderLabel>
         <span>Shadows</span>
@@ -90,9 +86,9 @@ export const VisualEffectsControls: FC<VisualEffectsControlsProps> = ({ id }) =>
         </>
       )}
 
-      <FogControls id={id} />
-      <ClippingControls id={id} />
-      <AnimationControls id={id} />
+      <FogControls />
+      <ClippingControls />
+      <AnimationControls />
     </ControlGroup>
   )
 }

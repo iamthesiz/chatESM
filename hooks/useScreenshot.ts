@@ -2,6 +2,7 @@ import { useMolstar } from './useMolstar'
 import { useBackground } from './useBackground'
 import { copyImage, downloadImage } from '../utils'
 import type { ScreenshotOptions } from './types'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface ScreenshotActions {
   screenshot: (options?: ScreenshotOptions) => Promise<string | void>
@@ -9,7 +10,7 @@ export interface ScreenshotActions {
   downloadScreenshot: (options?: ScreenshotOptions) => Promise<void>
 }
 
-export function useScreenshot(id?: string): ScreenshotActions {
+export function useScreenshot(id: string = DEFAULT_MOLSTAR_ID): ScreenshotActions {
   const molstar = useMolstar(id)
   const [background, setBackground] = useBackground(id)
 

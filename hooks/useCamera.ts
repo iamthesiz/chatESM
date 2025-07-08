@@ -26,6 +26,7 @@ import { useClipping, ClippingState } from './useClipping'
 import { useStereo, StereoState } from './useStereo'
 import { useViewport, ViewportState } from './useViewport'
 import { vec3ToArray, arrayToVec3 } from '../utils'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface CameraState {
   // Core camera state
@@ -60,7 +61,16 @@ export interface CameraState {
   center: (options?: { durationMs?: number }) => void
 }
 
-export type SetCamera = (updates: Partial<Omit<CameraState, 'reset' | 'orientAxes' | 'resetAxes' | 'focus' | 'center'>>) => void
+// For SetCamera, allow partial animation updates
+type SetCameraUpdates = Omit<CameraState, 'reset' | 'orientAxes' | 'resetAxes' | 'focus' | 'center' | 'animation'> & {
+  animation?: {
+    type?: 'off' | 'spin' | 'rock'
+    speed?: number
+    angle?: number
+  } | 'off' | 'spin' | 'rock'  // Allow shorthand for just setting type
+}
+
+export type SetCamera = (updates: Partial<SetCameraUpdates>) => void
 
 // Default state when molstar is not loaded
 const defaultCameraCore = {
@@ -78,7 +88,7 @@ const defaultCameraCore = {
   }
 }
 
-export function useCamera(id?: string): [CameraState, SetCamera] {
+export function useCamera(id: string = DEFAULT_MOLSTAR_ID): [CameraState, SetCamera] {
   const molstar = useMolstar(id)
   const [axes, setAxes] = useAxes(id)
   const [fog, setFog] = useFog(id)
@@ -208,14 +218,30 @@ export function useCamera(id?: string): [CameraState, SetCamera] {
     updates.viewport && setViewport(updates.viewport)
 
     // Handle animation updates
-    if (updates.animation) {
-      const animation = updates.animation
+    if (updates.animation !== undefined) {
+      let animationType: string
+      let animationSpeed: number | undefined
+      let animationAngle: number | undefined
 
-      const animateConfig: any = { name: animation.type }
-      if (animation.type !== 'off') {
-        animateConfig.params = { speed: animation.speed ?? 1 }
-        if (animation.type === 'rock' && animation.angle !== undefined) {
-          animateConfig.params.angle = animation.angle
+      // Handle both shorthand string and object forms
+      if (typeof updates.animation === 'string') {
+        animationType = updates.animation
+      } else {
+        animationType = updates.animation.type ?? molstar.trackball?.animate?.name ?? 'off'
+        animationSpeed = updates.animation.speed
+        animationAngle = updates.animation.angle
+      }
+
+      const animateConfig: any = { name: animationType }
+      if (animationType !== 'off') {
+        // Use provided speed, or keep current speed, or default to 1
+        const currentSpeed = molstar.trackball?.animate?.params?.speed
+        animateConfig.params = { speed: animationSpeed ?? currentSpeed ?? 1 }
+        
+        if (animationType === 'rock') {
+          // Use provided angle, or keep current angle, or default to 15
+          const currentAngle = molstar.trackball?.animate?.params?.angle
+          animateConfig.params.angle = animationAngle ?? currentAngle ?? 15
         }
       }
 

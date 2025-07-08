@@ -14,11 +14,10 @@ import { StructureTypeControls } from './native/StructureTypeControls'
 import { Container, Section, SectionTitle } from './native/styled'
 
 interface NativeControlPanelProps {
-  id?: string
   nativePanel: Noun
 }
 
-export function NativeControlPanel({ id, nativePanel }: NativeControlPanelProps) {
+export function NativeControlPanel({ nativePanel }: NativeControlPanelProps) {
   const [{ structure, quickStyles, components, sequenceViewer }, { toggle, close }] = useToggles(true, true, true, true)
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
   return (
@@ -36,7 +35,7 @@ export function NativeControlPanel({ id, nativePanel }: NativeControlPanelProps)
                 Sequence Viewer
                 <span style={{ marginLeft: 'auto' }}>{sequenceViewer.isOn ? '−' : '+'}</span>
               </SectionTitle>
-              {sequenceViewer.isOn && <SequenceViewer molstarId={id} />}
+              {sequenceViewer.isOn && <SequenceViewer />}
             </Section>
 
             <Section>
@@ -45,7 +44,7 @@ export function NativeControlPanel({ id, nativePanel }: NativeControlPanelProps)
                 Quick Styles
                 <span style={{ marginLeft: 'auto' }}>{quickStyles.isOn ? '−' : '+'}</span>
               </SectionTitle>
-              {quickStyles.isOn && <QuickStylesControls id={id} />}
+              {quickStyles.isOn && <QuickStylesControls />}
             </Section>
 
             <Section>
@@ -54,10 +53,10 @@ export function NativeControlPanel({ id, nativePanel }: NativeControlPanelProps)
                 Components
                 <span style={{ marginLeft: 'auto' }}>{components.isOn ? '−' : '+'}</span>
               </SectionTitle>
-              {components.isOn && <ComponentsPanel id={id} />}
+              {components.isOn && <ComponentsPanel />}
             </Section>
 
-            <StructureTypeControls id={id} />
+            <StructureTypeControls />
 
             <Section>
               <SectionTitle onClick={() => toggle(structure)}>
@@ -65,7 +64,7 @@ export function NativeControlPanel({ id, nativePanel }: NativeControlPanelProps)
                 Structure
                 <span style={{ marginLeft: 'auto' }}>{structure.isOn ? '−' : '+'}</span>
               </SectionTitle>
-              {structure.isOn && <StructureControls id={id} />}
+              {structure.isOn && <StructureControls />}
             </Section>
           </Container>
         </TooltipContext.Provider>

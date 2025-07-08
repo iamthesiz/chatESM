@@ -6,6 +6,7 @@ import { useMolstar } from './useMolstar'
 import { useCamera } from './useCamera'
 import { useBackground } from './useBackground'
 import { useScreenshot } from './useScreenshot'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 import 'molstar/lib/mol-plugin-ui/skin/light.scss'
 
 import type {
@@ -37,8 +38,8 @@ import {
 } from '../utils/molstar-selections'
 import { hideNativeControlsStyle } from '../utils'
 
-export function useMolecule(id?: string): [MoleculeInstance, UseMolstarReturn['setters']] {
-  const molstar = useMolstar(id || 'default', 'useMolecule')
+export function useMolecule(id: string = DEFAULT_MOLSTAR_ID): [MoleculeInstance, UseMolstarReturn['setters']] {
+  const molstar = useMolstar(id, 'useMolecule')
   const [selections, setSelections] = useState<string[]>([])
   const [camera, setCamera] = useCamera(id)
   const [background, setBackground] = useBackground(id)

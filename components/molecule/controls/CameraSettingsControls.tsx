@@ -7,12 +7,8 @@ import { ControlGroup, Label, SliderLabel, ButtonGroup, SmallButton, Slider, Sli
 import { AxesControls } from './AxesControls'
 import { StereoControls } from './StereoControls'
 
-interface CameraSettingsControlsProps {
-  id?: string
-}
-
-export const CameraSettingsControls: FC<CameraSettingsControlsProps> = ({ id }) => {
-  const [camera, setCamera] = useCamera(id)
+export const CameraSettingsControls: FC = () => {
+  const [camera, setCamera] = useCamera()
 
   return (
     <ControlGroup>
@@ -41,8 +37,8 @@ export const CameraSettingsControls: FC<CameraSettingsControlsProps> = ({ id }) 
         </SmallButton>
       </ButtonGroup>
 
-      <AxesControls id={id} />
-      <StereoControls id={id} />
+      <AxesControls />
+      <StereoControls />
 
       <SliderLabel>
         <span>Field of View</span>

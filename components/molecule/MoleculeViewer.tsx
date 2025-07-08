@@ -4,20 +4,20 @@ import { keyframes } from '@emotion/react'
 import { useEffect, useState } from 'react'
 import { useMolecule } from '../../hooks/useMolecule'
 import { useSelection } from '../../hooks/useSelection'
-import { DEFAULT_MOLSTAR_ID } from '../../hooks/constants'
 import type { FC } from 'react'
 import { NativeControlPanel } from './NativeControlPanel'
 import { ScreenshotButton } from './ScreenshotButton'
 import { SettingsAndControlsPanel } from './SettingsAndControlsPanel'
 import { StructureTitle } from './StructureTitle'
+import { MolstarCanvas } from '../MolstarCanvas'
 import { FiTool, FiX, FiMenu } from 'react-icons/fi'
 import { FaMousePointer } from 'react-icons/fa'
 import useToggles from 'toggles'
 
 export const MoleculeViewer: FC = () => {
-  const [molecule] = useMolecule(DEFAULT_MOLSTAR_ID)
+  const [molecule] = useMolecule()
 
-  const [selection, selectionManager] = useSelection(DEFAULT_MOLSTAR_ID)
+  const [selection, selectionManager] = useSelection()
   const [{ controlsPanel, nativePanel }, { toggle }] = useToggles(false, false)
 
   const [currentVersion, setCurrentVersion] = useState('v3')
@@ -29,9 +29,20 @@ export const MoleculeViewer: FC = () => {
   ])
 
 
+  // Debug molecule state
+  useEffect(() => {
+    console.log('Molecule state:', {
+      initialized: molecule.initialized,
+      loaded: molecule.loaded,
+      loading: molecule.loading,
+      molecule
+    })
+  }, [molecule.initialized, molecule.loaded, molecule.loading])
+
   // Load initial structure once mounted but not yet loaded
   useEffect(() => {
     if (molecule.initialized && !molecule.loaded) {
+      console.log('Loading structure...')
       molecule.load({
         pdbId: '7D3T',  // Human hemoglobin with 4 chains
         preset: 'default',
@@ -45,17 +56,17 @@ export const MoleculeViewer: FC = () => {
         hideNativeControls: true
       })
     }
-  }, [molecule.initialized, molecule.loaded])
+  }, [molecule.initialized, molecule.loaded, molecule.loading])
 
   return (
     <Container>
       <Header>
-        <StructureTitle id={DEFAULT_MOLSTAR_ID} />
+        <StructureTitle />
         <Controls>
           <ControlButton onClick={() => molecule?.fullscreen()}>
             Fullscreen
           </ControlButton>
-          <ScreenshotButton id={DEFAULT_MOLSTAR_ID} />
+          <ScreenshotButton />
           <VersionDropdown value={currentVersion} onChange={(e) => setCurrentVersion(e.target.value)}>
             {versions.map(version => (
               <option key={version.id} value={version.id}>
@@ -73,7 +84,14 @@ export const MoleculeViewer: FC = () => {
             </LoadingOverlay>
           )}
 
-          <MolstarContainer ref={molecule?.for} style={{ opacity: molecule?.loading ? 0 : 1, transition: 'opacity 0.2s' }} />
+          <MolstarCanvas 
+            style={{ 
+              opacity: molecule?.loading ? 0 : 1, 
+              transition: 'opacity 0.2s',
+              width: '100%',
+              height: '100%'
+            }} 
+          />
 
           <ToolbarContainer>
             <ToolbarButton
@@ -101,9 +119,9 @@ export const MoleculeViewer: FC = () => {
           </ToolbarContainer>
         </ViewerContent>
 
-        <NativeControlPanel id={DEFAULT_MOLSTAR_ID} nativePanel={nativePanel} />
+        <NativeControlPanel nativePanel={nativePanel} />
 
-        <SettingsAndControlsPanel id={DEFAULT_MOLSTAR_ID} controlsPanel={controlsPanel} />
+        <SettingsAndControlsPanel controlsPanel={controlsPanel} />
       </ViewerContainer>
     </Container >
   )
@@ -190,18 +208,6 @@ const ViewerContent = styled.div`
   height: 100%;
   /* Prevent layout shifts */
   contain: layout size;
-`
-
-const MolstarContainer = styled.div`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  /* Prevent Molstar from changing container size */
-  & > * {
-    position: absolute !important;
-    inset: 0 !important;
-  }
 `
 
 const ToolbarContainer = styled.div`

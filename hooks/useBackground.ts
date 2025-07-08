@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useMolstar } from './useMolstar'
 import { BACKGROUND_COLOR_MAP, NAMED_COLORS } from '../utils/molstar-selections'
 import { adjustColorBrightness } from '../utils'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface BackgroundState {
   color: string
@@ -10,7 +11,7 @@ export interface BackgroundState {
 
 export type SetBackground = (background: string, lighten?: number, darken?: number) => void
 
-export function useBackground(id?: string): [BackgroundState, SetBackground] {
+export function useBackground(id: string = DEFAULT_MOLSTAR_ID): [BackgroundState, SetBackground] {
   const molstar = useMolstar(id)
   const [state, setState] = useState<BackgroundState>({
     color: '#ffffff',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useMolstar } from './useMolstar'
 import { sleep } from '../utils'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 export interface StereoState {
   enabled: boolean
   eyeSeparation: number
@@ -15,7 +16,7 @@ export interface StereoConfig {
 
 type SetStereo = (config: StereoConfig | ((prev: StereoState) => StereoConfig)) => void
 
-export function useStereo(id?: string): [StereoState, SetStereo] {
+export function useStereo(id: string = DEFAULT_MOLSTAR_ID): [StereoState, SetStereo] {
   const molstar = useMolstar(id)
 
   // Default stereo state

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMolstar } from './useMolstar'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface FogState {
   enabled: boolean
@@ -17,7 +18,7 @@ export interface FogConfig {
 
 type SetFog = (config: FogConfig | ((prev: FogState) => FogConfig)) => void
 
-export function useFog(id?: string): [FogState, SetFog] {
+export function useFog(id: string = DEFAULT_MOLSTAR_ID): [FogState, SetFog] {
   const molstar = useMolstar(id)
   
   // Default fog state

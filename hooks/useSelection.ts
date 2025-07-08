@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import useHook from './useHook'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 import {
   getOneLetterCode,
   buildSelectionSummary,
@@ -27,7 +28,7 @@ import {
 } from '../utils'
 
 
-export function useSelection(id: string): [Selection, SelectionManager] {
+export function useSelection(id: string = DEFAULT_MOLSTAR_ID): [Selection, SelectionManager] {
   const hook = useHook(id, 'useSelection')
   const [loading, setLoading] = useState(true)
 

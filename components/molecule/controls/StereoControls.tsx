@@ -5,12 +5,8 @@ import Rotate from '../../Rotate'
 import { useStereo } from '../../../hooks/useStereo'
 import { ToggleSwitch, Slider, SliderLabel, SliderRow, ResetButton } from './styled'
 
-interface StereoControlsProps {
-  id?: string
-}
-
-export const StereoControls: FC<StereoControlsProps> = ({ id }) => {
-  const [stereo, setStereo] = useStereo(id)
+export const StereoControls: FC = () => {
+  const [stereo, setStereo] = useStereo()
 
   return (
     <>

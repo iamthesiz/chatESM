@@ -2,12 +2,8 @@ import { FC } from 'react'
 import styled from '@emotion/styled'
 import { useMolstar } from '../../hooks/useMolstar'
 
-interface StructureTitleProps {
-  id?: string
-}
-
-export const StructureTitle: FC<StructureTitleProps> = ({ id }) => {
-  const molstar = useMolstar(id || 'default')
+export const StructureTitle: FC = () => {
+  const molstar = useMolstar()
 
   const title = (() => {
     // Check loading state

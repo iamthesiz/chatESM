@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useMolstar } from './useMolstar'
+import { DEFAULT_MOLSTAR_ID } from './constants'
 
 export interface ClippingState {
   enabled: boolean
@@ -23,7 +24,7 @@ export interface ClippingConfig {
 
 type SetClipping = (config: ClippingConfig | ((prev: ClippingState) => ClippingConfig)) => void
 
-export function useClipping(id?: string): [ClippingState, SetClipping] {
+export function useClipping(id: string = DEFAULT_MOLSTAR_ID): [ClippingState, SetClipping] {
   const molstar = useMolstar(id)
   
   // Default clipping state
