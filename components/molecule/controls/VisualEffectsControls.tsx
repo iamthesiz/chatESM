@@ -27,9 +27,7 @@ export const VisualEffectsControls: FC = () => {
             checked={shadows.isOn}
             onChange={(e) => {
               toggle(shadows)
-              setAppearance({
-                shadows: e.target.checked
-              })
+              setAppearance({ shadows: e.target.checked })
             }}
           />
           <span></span>

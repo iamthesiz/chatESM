@@ -3,11 +3,7 @@ import { FC, useState } from 'react'
 import styled from '@emotion/styled'
 import { useToggles } from 'toggles'
 
-interface StructureTypeControlsProps {
-  id?: string
-}
-
-export const StructureTypeControls: FC<StructureTypeControlsProps> = ({ id }) => {
+export const StructureTypeControls: FC = () => {
   const [structureType, setStructureType] = useState('model')
   const [{ dynamicBonds }, { toggle }] = useToggles()
 
@@ -16,9 +12,7 @@ export const StructureTypeControls: FC<StructureTypeControlsProps> = ({ id }) =>
       <Label>Type</Label>
       <Select
         value={structureType}
-        onChange={(e) => {
-          setStructureType(e.target.value)
-        }}
+        onChange={(e) => setStructureType(e.target.value)}
       >
         <option value="model">Model</option>
         <option value="assembly">Assembly</option>
@@ -33,10 +27,7 @@ export const StructureTypeControls: FC<StructureTypeControlsProps> = ({ id }) =>
           <input
             type="checkbox"
             checked={dynamicBonds.isOn}
-            onChange={() => {
-              toggle(dynamicBonds)
-              console.log('Dynamic bonds:', !dynamicBonds.isOn)
-            }}
+            onChange={() => toggle(dynamicBonds)}
           />
           <span></span>
         </ToggleSwitch>
