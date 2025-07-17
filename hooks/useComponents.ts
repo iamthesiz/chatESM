@@ -51,7 +51,7 @@ interface ComponentsManager {
 }
 
 export function useComponents(id: string = DEFAULT_MOLSTAR_ID): [components: Component[], manager: ComponentsManager] {
-  const molstar = useMolstar(id, 'useComponents')
+  const molstar = useMolstar(id)
   const componentList = useRef<Component[]>([])
   const [loading, setLoading] = useState(true)
 

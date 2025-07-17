@@ -51,7 +51,7 @@ export type SetSequence = (update: Partial<Omit<SequenceState, 'loading' | 'stru
 }) => void
 
 export function useSequence(id: string = DEFAULT_MOLSTAR_ID): [SequenceState, SetSequence] {
-  const molstar = useMolstar(id, 'useSequence')
+  const molstar = useMolstar(id)
   const [state, setState] = useState<SequenceState>({
     loading: true,
     mode: 'chain',

@@ -4,13 +4,11 @@ import { MoleculeViewer } from '../components/molecule/MoleculeViewer'
 import { ResizeHandle } from '../components/layout/ResizeHandle'
 import styled from '@emotion/styled'
 import { useToggles } from 'toggles'
-import * as BiIcons from 'react-icons/bi'
-
-const BiSidebar = BiIcons.BiSidebar as any
+import { BiSidebar } from 'react-icons/bi'
 import { useResize } from '../hooks/useResize'
 
 export default function Home() {
-  const [{ sidebar }, { toggle }] = useToggles(false) // false = sidebar is initially closed
+  const [{ sidebar }, { toggle }] = useToggles('global')
 
   return (
     <LayoutContainer>
@@ -20,7 +18,7 @@ export default function Home() {
             <BiSidebar />
           </SidebarToggle>
           <ChatListPanel isOpen={!sidebar.isOpen}>
-            <ChatList sidebar={sidebar} />
+            <ChatList />
           </ChatListPanel>
           <ChatPanel hasSidebar={sidebar.isOpen}>
             <Chat />

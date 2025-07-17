@@ -10,7 +10,7 @@ import { AnimationControls } from './AnimationControls'
 
 export const VisualEffectsControls: FC = () => {
   const [, { setAppearance, setQuality }] = useMolecule()
-  const [{ shadows, outline }, { toggle }] = useToggles(false, false)
+  const [{ shadows, outline }, { toggle }] = useToggles()
   const [outlineScale, setOutlineScale] = useState(1)
 
   return (

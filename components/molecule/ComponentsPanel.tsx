@@ -8,11 +8,11 @@ const FaPlus = FaIcons.FaPlus as any
 import styled from '@emotion/styled'
 import { useState } from 'react'
 import { useComponents } from '../../hooks/useComponents'
-import { useToggles, useVerbs, Noun } from 'toggles'
+import { useToggles } from 'toggles'
 
 export function ComponentsPanel() {
   const [components, manager] = useComponents()
-  const [{ addDialog }, { open, toggle, close }] = useToggles(false)
+  const [{ addDialog }, { open }] = useToggles('global')
 
   if (manager.loading) {
     return (
@@ -87,18 +87,16 @@ export function ComponentsPanel() {
         </ActionBarButton>
       </ActionBar>
 
-      {addDialog.isOpen && (
-        <AddComponentDialog addDialog={addDialog} manager={manager} />
-      )}
+      {addDialog.isOpen && <AddComponentDialog manager={manager} />}
     </Container>
   )
 }
 
-function AddComponentDialog({ addDialog, manager }: { addDialog: Noun; manager: any }) {
+function AddComponentDialog({ manager }: { manager: any }) {
+  const [{ addDialog }, { close }] = useToggles('global')
   const [selection, setSelection] = useState('polymer')
   const [representation, setRepresentation] = useState('cartoon')
   const [label, setLabel] = useState('')
-  const { close } = useVerbs()
 
   const handleAdd = async () => {
     try {
@@ -114,11 +112,11 @@ function AddComponentDialog({ addDialog, manager }: { addDialog: Noun; manager: 
   }
 
   return (
-    <DialogOverlay onClick={onClose}>
+    <DialogOverlay onClick={() => close(addDialog)}>
       <DialogContent onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <h3>Add Component</h3>
-          <CloseButton onClick={onClose}>×</CloseButton>
+          <CloseButton onClick={() => close(addDialog)}>×</CloseButton>
         </DialogHeader>
 
         <DialogBody>
@@ -156,7 +154,7 @@ function AddComponentDialog({ addDialog, manager }: { addDialog: Noun; manager: 
         </DialogBody>
 
         <DialogFooter>
-          <Button onClick={onClose} variant="secondary">Cancel</Button>
+          <Button onClick={() => close(addDialog)} variant="secondary">Cancel</Button>
           <Button onClick={handleAdd} variant="primary">Add</Button>
         </DialogFooter>
       </DialogContent>

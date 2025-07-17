@@ -1,4 +1,4 @@
-import { useMemo, useRef, useReducer } from 'react'
+import { useMemo, useRef } from 'react'
 import { useAtom } from 'jotai'
 import { createPluginUI } from 'molstar/lib/mol-plugin-ui'
 import { renderReact18 } from 'molstar/lib/mol-plugin-ui/react18'
@@ -9,6 +9,9 @@ import { molstarStateAtomFamily } from './atoms'
 import { DEFAULT_MOLSTAR_ID } from './constants'
 import 'molstar/lib/mol-plugin-ui/skin/light.scss'
 
+// Global map to store molstar instances by ID
+const molstarInstances = new Map<string, any>()
+
 interface LoadOptions {
   pdbId?: string
   url?: string
@@ -18,15 +21,13 @@ interface LoadOptions {
 /**
  * Hook to access the shared Molstar instance
  * @param id - The ID of the Molstar instance, or a PDB ID/URL to auto-load (defaults to DEFAULT_MOLSTAR_ID)
- * @param typeId - Optional type identifier for debugging
  * @returns Object with molstar instance and loading state
  */
-export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
+export function useMolstar(id: string = DEFAULT_MOLSTAR_ID) {
   const container = useEvent<HTMLDivElement>(id)
   const [state, setState] = useAtom(molstarStateAtomFamily(id))
   const hasAutoLoaded = useRef(false)
   const isInitializing = useRef(false)
-  const rerender = useReducer((x: number) => x + 1, 0)[1]
 
   const initMolstar = async () => {
     if (!container.ref || isInitializing.current || state.molstar) {
@@ -62,6 +63,8 @@ export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
       })
 
       setState(prev => ({ ...prev, molstar: plugin }))
+      molstarInstances.set(id, plugin)  // Store in global map
+      isInitializing.current = false  // Reset after successful init
       checkAutoLoad(plugin)
     } catch (error) {
       setState(prev => ({ ...prev, loading: false }))
@@ -79,11 +82,13 @@ export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
       if (!hasStructures) {
         if (isPdbId(id)) {
           hasAutoLoaded.current = true
-          load({ pdbId: id }).catch((err: any) => {
+          load({ pdbId: id }).catch(() => {
+            // Auto-load failed, but that's okay
           })
         } else if (isUrl(id)) {
           hasAutoLoaded.current = true
-          load({ url: id }).catch((err: any) => {
+          load({ url: id }).catch(() => {
+            // Auto-load failed, but that's okay
           })
         } else {
           // Not a PDB ID or URL, keep loading as true so external code can trigger loading
@@ -96,14 +101,9 @@ export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
     }
   }
 
-  const hook = useIdEffect(id, async (isFirstMount: boolean) => {
+  useIdEffect(id, async (isFirstMount: boolean) => {
 
     if (isFirstMount) {
-
-      if (!hook.context.rerender) {
-        hook.context.rerender = rerender
-      }
-
       if (container.ref) {
         await initMolstar()
       } else {
@@ -116,13 +116,14 @@ export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
     return (isLastUnmount: boolean) => {
       if (isLastUnmount && state.molstar) {
         state.molstar.dispose()
+        molstarInstances.delete(id)  // Remove from global map
         setState(prev => ({ ...prev, molstar: null, loading: true }))
       }
     }
   }, [])
 
   const loadStructureData = async (config: LoadOptions) => {
-    const molstar = state.molstar
+    const molstar = molstarInstances.get(id)
     if (!molstar) {
       throw new Error('Molstar not initialized')
     }
@@ -151,14 +152,17 @@ export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
   }
 
   // Main load function
-  const load = async (config: LoadOptions) => {
-    const molstar = state.molstar
+  const load = async (config: LoadOptions): Promise<any> => {
+    const molstar = molstarInstances.get(id)
+
+    // If molstar isn't ready yet, wait for it
     if (!molstar) {
-      throw new Error('[load] Molstar not initialized')
+      // Wait a bit and try again
+      await sleep(100)
+      return load(config)
     }
 
     setState(prev => ({ ...prev, loading: true }))
-    rerender()
 
     try {
       await molstar.clear()
@@ -167,12 +171,10 @@ export function useMolstar(id: string = DEFAULT_MOLSTAR_ID, _typeId?: string) {
       await loadStructureData(config)
 
       setState(prev => ({ ...prev, loading: false }))
-      rerender()
 
       return molstar
     } catch (error) {
       setState(prev => ({ ...prev, loading: false }))
-      rerender()
       throw error
     }
   }

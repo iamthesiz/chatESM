@@ -9,7 +9,7 @@ import { ToggleSwitch, Slider, SliderLabel, SliderRow, ResetButton, ColorPicker 
 
 export const OcclusionControls: FC = () => {
   const [, { setQuality }] = useMolecule()
-  const [{ occlusionToggle }, { toggle }] = useToggles(false)
+  const [{ occlusionToggle }, { toggle }] = useToggles()
   const [occlusionSettings, setOcclusionSettings] = useState({
     samples: 32,
     multiScale: {

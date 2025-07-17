@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import { useState } from 'react'
 import styled from '@emotion/styled'
-import { Noun, useToggles } from 'toggles'
+import { useToggles } from 'toggles'
 import { FaCube, FaPalette, FaDna } from 'react-icons/fa'
 import { MdLayers } from 'react-icons/md'
 import { FiX } from 'react-icons/fi'
@@ -13,12 +13,9 @@ import { StructureControls } from './native/StructureControls'
 import { StructureTypeControls } from './native/StructureTypeControls'
 import { Container, Section, SectionTitle } from './native/styled'
 
-interface NativeControlPanelProps {
-  nativePanel: Noun
-}
-
-export function NativeControlPanel({ nativePanel }: NativeControlPanelProps) {
-  const [{ structure, quickStyles, components, sequenceViewer }, { toggle, close }] = useToggles(true, true, true, true)
+export function NativeControlPanel() {
+  const [{ nativePanel }, { close }] = useToggles('global')
+  const [{ structure, quickStyles, components, sequenceViewer }, { toggle }] = useToggles(true, true, true, true)
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
   return (
     <Panel isOpen={nativePanel.isOpen}>

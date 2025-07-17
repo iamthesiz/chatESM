@@ -9,7 +9,7 @@ interface StructureTypeControlsProps {
 
 export const StructureTypeControls: FC<StructureTypeControlsProps> = ({ id }) => {
   const [structureType, setStructureType] = useState('model')
-  const [{ dynamicBonds }, { toggle }] = useToggles(false)
+  const [{ dynamicBonds }, { toggle }] = useToggles()
 
   return (
     <>

@@ -3571,10 +3571,10 @@ to-regex-range@^5.0.1:
   dependencies:
     is-number "^7.0.0"
 
-toggles@1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/toggles/-/toggles-1.0.4.tgz#59a56bcb096589e0677e53f005852dee99dba7c3"
-  integrity sha512-BgCYAWW0XPMVWPbhcWAA9QZy36JxP5cZeCc9IVtTkXGOUmzTuEpMy7nBkC2PSd674AGXDmO0cwhG77+blN5ZhA==
+toggles@1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/toggles/-/toggles-1.0.5.tgz#eb5c589b263bb9a8b7b2c85782342c44067340ae"
+  integrity sha512-S763qk+209z5LYVGXX5O0OhTBIIqkscI2T2myTuB2guVzTr7I1Ffdib6jp6p7+fMw8qLTojvyingnp45GweENw==
 
 toidentifier@1.0.1:
   version "1.0.1"

@@ -1,7 +1,7 @@
 /** @jsxImportSource @emotion/react */
 import styled from '@emotion/styled'
 import { FiX } from 'react-icons/fi'
-import { Noun, useVerbs } from 'toggles'
+import { useToggles } from 'toggles'
 import type { FC } from 'react'
 import { CameraControls } from './controls/CameraControls'
 import { BackgroundControls } from './controls/BackgroundControls'
@@ -10,12 +10,8 @@ import { QualityControls } from './controls/QualityControls'
 import { SelectionModeControls } from './controls/SelectionModeControls'
 import { CameraSettingsControls } from './controls/CameraSettingsControls'
 
-interface Props {
-  controlsPanel: Noun
-}
-
-export const SettingsAndControlsPanel: FC<Props> = ({ controlsPanel }) => {
-  const { close } = useVerbs()
+export const SettingsAndControlsPanel: FC = () => {
+  const [{ controlsPanel }, { close }] = useToggles('global')
 
   return (
     <Panel isOpen={controlsPanel.isOpen}>

@@ -18,7 +18,7 @@ export const MoleculeViewer: FC = () => {
   const [molecule] = useMolecule()
 
   const [selection, selectionManager] = useSelection()
-  const [{ controlsPanel, nativePanel }, { toggle }] = useToggles(false, false)
+  const [{ controlsPanel, nativePanel }, { toggle }] = useToggles('global')
 
   const [currentVersion, setCurrentVersion] = useState('v3')
   const [versions] = useState([
@@ -28,42 +28,28 @@ export const MoleculeViewer: FC = () => {
     { id: 'v3', name: 'v3', date: '2024-01-25' }
   ])
 
-
-  // Debug molecule state
+  // Load initial structure
   useEffect(() => {
-    console.log('Molecule state:', {
-      initialized: molecule.initialized,
-      loaded: molecule.loaded,
-      loading: molecule.loading,
-      molecule
+    molecule.load({
+      pdbId: '7D3T', // Rice protein complex structure
+      preset: 'default',
+      quality: 'medium',
+      background: 'white',
+      lighting: 'soft',
+      protein: {
+        style: 'cartoon',
+        color: 'chain-id'
+      },
+      hideNativeControls: true
     })
-  }, [molecule.initialized, molecule.loaded, molecule.loading])
-
-  // Load initial structure once mounted but not yet loaded
-  useEffect(() => {
-    if (molecule.initialized && !molecule.loaded) {
-      console.log('Loading structure...')
-      molecule.load({
-        pdbId: '7D3T',  // Human hemoglobin with 4 chains
-        preset: 'default',
-        quality: 'medium',
-        background: 'white',
-        lighting: 'soft',
-        protein: {
-          style: 'cartoon',
-          color: 'chain-id'
-        },
-        hideNativeControls: true
-      })
-    }
-  }, [molecule.initialized, molecule.loaded, molecule.loading])
+  }, [])
 
   return (
     <Container>
       <Header>
         <StructureTitle />
         <Controls>
-          <ControlButton onClick={() => molecule?.fullscreen()}>
+          <ControlButton onClick={() => molecule.fullscreen()}>
             Fullscreen
           </ControlButton>
           <ScreenshotButton />
@@ -76,21 +62,21 @@ export const MoleculeViewer: FC = () => {
           </VersionDropdown>
         </Controls>
       </Header>
-      <ViewerContainer bgColor={molecule?.background || 'white'}>
+      <ViewerContainer bgColor={molecule.background || 'white'}>
         <ViewerContent>
-          {molecule?.loading && (
+          {molecule.loading && (
             <LoadingOverlay>
               <LoadingText data-text="Loading structure...">Loading structure...</LoadingText>
             </LoadingOverlay>
           )}
 
-          <MolstarCanvas 
-            style={{ 
-              opacity: molecule?.loading ? 0 : 1, 
+          <MolstarCanvas
+            style={{
+              opacity: molecule.loading ? 0 : 1,
               transition: 'opacity 0.2s',
               width: '100%',
               height: '100%'
-            }} 
+            }}
           />
 
           <ToolbarContainer>
@@ -119,9 +105,9 @@ export const MoleculeViewer: FC = () => {
           </ToolbarContainer>
         </ViewerContent>
 
-        <NativeControlPanel nativePanel={nativePanel} />
+        <NativeControlPanel />
 
-        <SettingsAndControlsPanel controlsPanel={controlsPanel} />
+        <SettingsAndControlsPanel />
       </ViewerContainer>
     </Container >
   )

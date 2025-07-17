@@ -39,7 +39,7 @@ import {
 import { hideNativeControlsStyle } from '../utils'
 
 export function useMolecule(id: string = DEFAULT_MOLSTAR_ID): [MoleculeInstance, UseMolstarReturn['setters']] {
-  const molstar = useMolstar(id, 'useMolecule')
+  const molstar = useMolstar(id)
   const [selections, setSelections] = useState<string[]>([])
   const [camera, setCamera] = useCamera(id)
   const [background, setBackground] = useBackground(id)
