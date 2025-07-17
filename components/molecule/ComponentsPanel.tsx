@@ -1,10 +1,5 @@
 /** @jsxImportSource @emotion/react */
-import * as FaIcons from 'react-icons/fa'
-
-const FaEye = FaIcons.FaEye as any
-const FaEyeSlash = FaIcons.FaEyeSlash as any
-const FaTrash = FaIcons.FaTrash as any
-const FaPlus = FaIcons.FaPlus as any
+import { FaEye, FaEyeSlash, FaTrash, FaPlus } from 'react-icons/fa'
 import styled from '@emotion/styled'
 import { useState } from 'react'
 import { useComponents } from '../../hooks/useComponents'

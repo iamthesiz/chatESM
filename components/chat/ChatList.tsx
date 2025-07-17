@@ -1,12 +1,9 @@
 /** @jsxImportSource @emotion/react */
 import styled from '@emotion/styled'
 import { useState } from 'react'
-import * as Icons from 'react-icons/bi'
-import * as Icons2 from 'react-icons/hi2'
+import { BiSidebar } from 'react-icons/bi'
+import { HiOutlinePencilSquare } from 'react-icons/hi2'
 import { useToggles } from 'toggles'
-
-const BiSidebar = Icons.BiSidebar as any
-const HiOutlinePencilSquare = Icons2.HiOutlinePencilSquare as any
 interface Chat {
   id: string
   title: string
